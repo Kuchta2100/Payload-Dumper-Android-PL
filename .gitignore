@@ -13,4 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
-lib/payload-dumper-android-rs/target
+/lib/payload-dumper-android-rs/target
+/target

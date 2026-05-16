@@ -1,3 +1,46 @@
 <resources>
-    <string name="app_name">Payload-Dumper</string>
+    <string name="app_name" translatable="false">Payload Dumper</string>
+    <string name="circle_add" translatable="false">M440,520L440,640Q440,657 451.5,668.5Q463,680 480,680Q497,680 508.5,668.5Q520,657 520,640L520,520L640,520Q657,520 668.5,508.5Q680,497 680,480Q680,463 668.5,451.5Q657,440 640,440L520,440L520,320Q520,303 508.5,291.5Q497,280 480,280Q463,280 451.5,291.5Q440,303 440,320L440,440L320,440Q303,440 291.5,451.5Q280,463 280,480Q280,497 291.5,508.5Q303,520 320,520L440,520ZM480,880Q397,880 324,848.5Q251,817 197,763Q143,709 111.5,636Q80,563 80,480Q80,397 111.5,324Q143,251 197,197Q251,143 324,111.5Q397,80 480,80Q563,80 636,111.5Q709,143 763,197Q817,251 848.5,324Q880,397 880,480Q880,563 848.5,636Q817,709 763,763Q709,817 636,848.5Q563,880 480,880ZM480,800Q614,800 707,707Q800,614 800,480Q800,346 707,253Q614,160 480,160Q346,160 253,253Q160,346 160,480Q160,614 253,707Q346,800 480,800ZM480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Q480,480 480,480Z</string>
+    <string name="home_page_payload_tips">Select a payload\nYou can select payload.bin/OTA.zip</string>
+    <string name="first_start_allow_file_access">Allow file access</string>
+    <string name="extract_screen_info_out_dir">"Output: "</string>
+    <string name="extract_screen_info_version">"Version: "</string>
+    <string name="security_patch_level">"Security Patch Level: "</string>
+    <string name="selector_header">Select %1$s</string>
+    <string name="selector_director">directory</string>
+    <string name="payload">payload</string>
+    <string name="partition_details_header">Partition Details:</string>
+    <string name="partition_details_name">Name: %1$s</string>
+    <string name="partition_details_size">Size: %1$s</string>
+    <string name="partition_details_hash">"Hash: "</string>
+    <string name="partition_details_hash_copied">Copied!</string>
+    <string name="selector_extract_here">EXTRACT HERE</string>
+    <string name="extract_screen_select_all">Select All</string>
+    <string name="extract_screen_deselect_all">Deselect All</string>
+    <string name="extract_screen_invert_selections">Invert Selections</string>
+    <string name="extract_screen_raw_data">Raw Data</string>
+    <string name="extract_screen_payload_error_check_log">Payload Error. Check Log</string>
+    <string name="txt_internal_storage">Internal Storage</string>
+    <string name="incremental_detected">Incremental detected! (Not Supported!)</string>
+    <string name="raw_data_loading">Loading…</string>
+    <string name="selector_screen_invalid_path">This directory doesn\'t exists</string>
+    <string name="selector_empty">Directory Empty!</string>
+    <string name="selector_no_permission">No read Permision Here!</string>
+    <string name="settings_concurrency">Concurrency</string>
+    <string name="settings_default_view">Default View</string>
+    <string name="settings_view_list">List</string>
+    <string name="settings_view_grid">Grid</string>
+    <string name="settings_auto_delete">Auto Delete</string>
+    <string name="settings_auto_delete_description">Delete output file on failure</string>
+    <string name="settings_theme_style">Theme Style</string>
+    <string name="settings_theme_style_info">System require Android 12+</string>
+    <string name="settings_dark_theme">Dark Theme</string>
+    <string name="settings_theme_system">System</string>
+    <string name="settings_theme_app">App</string>
+    <string name="settings_about_version">Version: %1$s</string>
+    <string name="settings_about_version_desc">Check for Updates</string>
+    <string name="settings_about_source_code">Source Code</string>
+    <string name="settings_about_github">\@GitHub</string>
+    <string name="settings_about_github_main_page">GitHub</string>
+    <string name="settings_about_github_username">\@Rajmani7584</string>
 </resources>

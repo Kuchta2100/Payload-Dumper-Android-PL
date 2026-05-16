@@ -1,0 +1,191 @@
+package com.rajmani7584.payloaddumper.ui.screens
+
+import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.UploadFile
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import com.rajmani7584.payloaddumper.MainActivity
+import com.rajmani7584.payloaddumper.model.DataModel
+import com.rajmani7584.payloaddumper.model.PayloadType
+import com.rajmani7584.payloaddumper.ui.components.AppTheme
+import com.rajmani7584.payloaddumper.ui.components.components.Button
+import com.rajmani7584.payloaddumper.ui.components.components.Scaffold
+import com.rajmani7584.payloaddumper.ui.components.components.textfield.OutlinedTextField
+import com.rajmani7584.payloaddumper.ui.customviews.LoadingIndicator
+import com.rajmani7584.payloaddumper.ui.customviews.ScreenTopBar
+
+
+@Composable
+fun HomeScreen(appNavController: NavHostController, homeNavController: NavHostController) {
+    Box(Modifier
+        .fillMaxSize()
+    ) {
+        NavHost(homeNavController, Screens.Home.route, Modifier.fillMaxSize()) {
+            composable(Screens.Home.route, enterTransition = {
+                fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End)
+            }, exitTransition = {
+                fadeOut() + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start)
+            }) {
+                HomeScreenUI(appNavController, homeNavController)
+            }
+            composable(Screens.Extract.route, enterTransition = {
+                fadeIn() + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start)
+            }, exitTransition = {
+                fadeOut() + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End)
+            }) {
+                    ExtractScreen(appNavController, homeNavController)
+            }
+        }
+    }
+}
+
+@Composable
+fun HomeScreenUI(appNavController: NavHostController, homeNavController: NavHostController) {
+    val dataModel: DataModel = viewModel(LocalActivity.current as MainActivity)
+
+    val payload by dataModel.payload
+    val error by dataModel.error
+    val isLoading by dataModel.isLoading
+
+    val coroutineScope = rememberCoroutineScope()
+
+    Scaffold(
+        topBar = { ScreenTopBar(title = "Payload Dumper") }) { innerPadding ->
+        Box(Modifier.padding(innerPadding).fillMaxSize()) {
+            Column(
+                Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Column(modifier = Modifier.padding(vertical = 16.dp, horizontal = 24.dp)) {
+                    Icon(
+                        Icons.Default.UploadFile,
+                        contentDescription = "File",
+                        Modifier.size(80.dp).align(
+                            Alignment.CenterHorizontally
+                        )
+                    )
+                    Spacer(Modifier.height(24.dp))
+                    Button(enabled = !isLoading, text = "Select a file", onClick = {
+                        appNavController.navigate(Screens.Selector.createRoute(false)) {
+                            popUpTo(Screens.Home.route) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    })
+
+                }
+                Spacer(Modifier.height(24.dp))
+
+                Text("OR", color = AppTheme.colors.text.copy(alpha = .4f))
+                Spacer(Modifier.height(24.dp))
+                Column {
+                    val url by dataModel.remoteUrl
+                    OutlinedTextField(
+                        value = url, onValueChange = { dataModel.setURL(it) },
+                        singleLine = true,
+                        modifier = Modifier.widthIn(Dp.Unspecified, 540.dp).fillMaxWidth(),
+                        enabled = !isLoading,
+                        placeholder = {
+                            Text(
+                                "https://website.com/ota.zip",
+                                color = AppTheme.colors.text.copy(alpha = .4f)
+                            )
+                        }
+                    )
+                    Button(
+                        enabled = !isLoading,
+                        onClick = {
+                                dataModel.init(
+                                    PayloadType.RemotePayload(url),
+                                    homeNavController
+                                )
+                        },
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                            .padding(vertical = 12.dp),
+                        text = "Fetch from remote"
+                    )
+                }
+                Spacer(Modifier.height(24.dp))
+                payload?.let { p ->
+                    Row(
+                        modifier = Modifier.widthIn(Dp.Unspecified, 540.dp).fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp)).background(
+                            AppTheme.colors.primary.copy(alpha = .05f)
+                        ).clickable (enabled = !isLoading) {
+                            homeNavController.navigate(Screens.Extract.route) {
+                                popUpTo(Screens.Home.route) {
+                                    saveState = true
+                                }
+                                restoreState = true
+                                launchSingleTop = false
+                            }
+                        }.padding(horizontal = 8.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            p.name,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Box(modifier = Modifier.size(16.dp)) {
+                            Icon(
+                                Icons.AutoMirrored.Default.ArrowForward,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                }
+                if (isLoading)
+                    LoadingIndicator()
+                error?.let {
+                    Text(it, color = Color.Red, fontFamily = FontFamily.Monospace)
+                }
+            }
+        }
+    }
+}
+
+sealed class Screens(val route: String) {
+    data object App: Screens("app")
+    data object Home: Screens("home")
+    data object Extract: Screens("extract")
+    data object Selector: Screens("selector/{directory}") {
+        fun createRoute(isDirectory: Boolean) = "selector/$isDirectory"
+    }
+}

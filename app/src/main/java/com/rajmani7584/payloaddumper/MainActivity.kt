@@ -2,50 +2,70 @@ package com.rajmani7584.payloaddumper
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.activity.viewModels
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.rajmani7584.payloaddumper.nativeHelper.PayloadDumper
-import com.rajmani7584.payloaddumper.ui.theme.PayloadDumperTheme
-import kotlinx.coroutines.Dispatchers
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import com.rajmani7584.payloaddumper.model.DataModel
+import com.rajmani7584.payloaddumper.ui.components.AppTheme
+import com.rajmani7584.payloaddumper.ui.components.components.Surface
+import com.rajmani7584.payloaddumper.ui.screens.App
+import com.rajmani7584.payloaddumper.ui.screens.LogManager
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private var requestCounter by mutableIntStateOf(0)
+    val model: DataModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(navigationBarStyle = SystemBarStyle.light(1, 0))
         setContent {
-            var msg by remember { mutableStateOf("default") }
-            val coroutineScope = rememberCoroutineScope()
-            PayloadDumperTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Column(Modifier.padding(innerPadding).fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                        Text(msg)
-                    }
+            AppTheme {
+                Surface (Modifier.fillMaxSize()) {
+                    App()
                 }
             }
-            LaunchedEffect(Unit) {
-                coroutineScope.launch (Dispatchers.IO) {
-                    delay(500)
-                    msg = PayloadDumper.init()
-                }
+            LaunchedEffect(requestCounter) {
+                delay(40)
+                model.setPermission(this@MainActivity)
+                if (model.hasPermission.value != true) LogManager.error("File Permission Denied")
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        requestCounter++
+    }
+}
+
+@Composable
+fun MDialog(onDismissRequest: () -> Unit, content: @Composable () -> Unit = {}) {
+    Dialog (onDismissRequest = onDismissRequest) {
+        Box(
+            Modifier.widthIn(Dp.Unspecified, 560.dp).fillMaxWidth(.9f).background(
+                Color.White,
+                RoundedCornerShape((12.dp))
+            ).padding(12.dp)
+        ) {
+            content()
         }
     }
 }
