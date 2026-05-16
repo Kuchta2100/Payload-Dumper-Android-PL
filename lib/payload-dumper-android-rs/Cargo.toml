@@ -3,18 +3,22 @@ name = "payload-dumper-android-rs"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-jni = "0.22.4"
-tokio = { version = "1.52.3", features = ["full"] }
+[[bin]]
+name = "pdumper-rs"
+path = "src/main.rs"
 
 [lib]
 name = "payload_dumper"
 path = "src/lib.rs"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 
-[profile.release]
-lto = true
-strip = true
-opt-level = "z"
-panic = "abort"
+[dependencies]
+jni = "0.22.4"
+prost = "0.14.3"
+tokio = { version = "1.52.3", features = ["full"] }
+ureq = "3.3.0"
+
+
+[build-dependencies]
+prost-build = "0.14.3"
