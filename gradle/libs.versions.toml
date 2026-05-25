@@ -1,6 +1,7 @@
 [versions]
 agp = "9.2.1"
 composables = "1.1.1"
+composeMarkdown = "0.7.2"
 coreKtx = "1.18.0"
 #flatbuffersJava = "25.2.10"
 junit = "4.13.2"
@@ -24,6 +25,7 @@ androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = 
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 composables = { module = "com.nomanr:composables", version.ref = "composables" }
 #flatbuffers-java = { module = "com.google.flatbuffers:flatbuffers-java", version.ref = "flatbuffersJava" }
+compose-markdown = { module = "com.github.jeziellago:compose-markdown", version.ref = "composeMarkdown" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
