@@ -14,7 +14,9 @@ pub struct UpdateInfo {
     pub new_partition_info: ::core::option::Option<PartInfo>,
     #[prost(message, repeated, tag = "3")]
     pub operations: ::prost::alloc::vec::Vec<Operation>,
-    #[prost(bool, required, tag = "4")]
+    #[prost(uint64, optional, tag = "4")]
+    pub download_size: ::core::option::Option<u64>,
+    #[prost(bool, required, tag = "5")]
     pub incremental: bool,
 }
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]

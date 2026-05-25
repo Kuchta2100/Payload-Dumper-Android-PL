@@ -3,10 +3,7 @@ use std::{
     io::{BufReader, Read, Seek},
 };
 
-use crate::{
-    helper::{constants::BUF_SIZE, errors::AppResult},
-    reader::Reader,
-};
+use crate::{helper::errors::AppResult, reader::Reader};
 
 pub(crate) struct LocalPayloadReader {
     file: BufReader<File>,
@@ -14,11 +11,11 @@ pub(crate) struct LocalPayloadReader {
 }
 
 impl LocalPayloadReader {
-    pub(crate) fn new(path: &str) -> AppResult<Self> {
+    pub(crate) fn new(path: &str, buf_size: usize) -> AppResult<Self> {
         let file = File::open(path)?;
         let len = file.metadata()?.len();
         Ok(Self {
-            file: BufReader::with_capacity(BUF_SIZE, file),
+            file: BufReader::with_capacity(buf_size, file),
             len,
         })
     }

@@ -5,6 +5,8 @@ mod reader;
 
 use std::{
     collections::HashMap,
+    fs::File,
+    io::{BufReader, Read as _},
     panic,
     path::PathBuf,
     sync::{
@@ -16,9 +18,9 @@ use std::{
 use jni::{
     EnvUnowned, jni_mangle,
     objects::{JByteBuffer, JClass, JString},
-    sys::{jbyteArray, jint, jstring},
+    sys::{jboolean, jbyteArray, jint, jstring},
 };
-use prost::Message;
+use sha2::{Digest as _, Sha256};
 use tokio::sync::Semaphore;
 
 use crate::{
@@ -60,7 +62,7 @@ static ENGINE: OnceLock<RwLock<Option<Session>>> = OnceLock::new();
 
 #[jni_mangle("com.rajmani7584.payloaddumper.nativeHelper.PayloadDumper")]
 pub fn init_session(mut e: EnvUnowned, _class: JClass) -> jint {
-    let res = e.with_env(|env| -> Result<_, jni::errors::Error> {
+    let res = e.with_env(|_env| -> Result<_, jni::errors::Error> {
         panic::catch_unwind(|| -> AppResult<()> {
             let mut engine = get_engine()
                 .write()
@@ -70,6 +72,15 @@ pub fn init_session(mut e: EnvUnowned, _class: JClass) -> jint {
             Ok(())
         })
         .map_err(|_| AppError::Other("Failed to init new session".to_string()))??;
+
+        // let st = JString::from_str(env, "hello from rust").unwrap();
+        // let _ = env.call_method(
+        //     class,
+        //     jni_str!("logFromRust"),
+        //     jni_sig!((str: JString)),
+        //     &[JValue::Object(&st)],
+        // );
+
         Ok(0)
     });
 
@@ -83,12 +94,14 @@ pub fn open_payload(
     p_type: jint,
     path: JString,
     concurrency: jint,
-) -> jint {
-    let o = env_u.with_env(|_env| -> Result<_, jni::errors::Error> {
-        panic::catch_unwind(move || -> AppResult<()> {
+    buf_size: jint,
+) -> jbyteArray {
+    let o = env_u.with_env(|env| -> Result<_, jni::errors::Error> {
+        let b = panic::catch_unwind(move || -> AppResult<Vec<u8>> {
             let payload = Payload::from_type(p_type as u8, &path.to_string())?;
 
-            let mut dumper = PayloadDumper::new(payload.clone())?;
+            let mut dumper = PayloadDumper::with_buf_size(payload.clone(), buf_size as usize)?;
+            let b = dumper.get_part_manifest_bytes()?;
             let part_manifest = dumper.get_part_manifest()?;
 
             let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -113,17 +126,15 @@ pub fn open_payload(
                 .map_err(|e| AppError::Other(e.to_string()))?;
 
             *engine = Some(session);
-            Ok(())
+
+            Ok(b)
         })
-        .map_err(|e| AppError::Other(format!("Rust panicked: {:?}", e)))?
-        .map_err(|e| match e {
-            AppError::Other(e) => AppError::Other(format!("Failed to open payload: {}", e)),
-            _ => e,
-        })?;
-        Ok(0)
+        .map_err(|e| AppError::Other(format!("Rust panicked: {:?}", e)))??;
+        env.byte_array_from_slice(&b)
     });
 
     o.resolve::<jni::errors::ThrowRuntimeExAndDefault>()
+        .into_raw()
 }
 
 #[jni_mangle("com.rajmani7584.payloaddumper.nativeHelper.PayloadDumper")]
@@ -219,7 +230,6 @@ pub fn bind_buffer(
     mut env_u: EnvUnowned,
     _class: JClass,
     task_count: jint,
-    // manifest: JByteArray,
     address: JByteBuffer,
 ) -> jint {
     let o = env_u.with_env(|env| -> Result<_, jni::errors::Error> {
@@ -242,16 +252,6 @@ pub fn bind_buffer(
             download_session.buffer_ptr = Some(buffer);
             download_session.task_count = task_count as u8;
 
-            // let mut manifest_lock = download_session
-            //     .manifest
-            //     .lock()
-            //     .map_err(|e| AppError::Other(e.to_string()))?;
-
-            // let bytes = env.convert_byte_array(&manifest)?;
-            // *manifest_lock = Some(
-            //     engine::part_manifest::PartManifest::decode(&bytes[..])
-            //         .map_err(|e| AppError::Other(e.to_string()))?,
-            // );
             Ok(0)
         })
         .map_err(|e| AppError::Other(format!("Rust panicked: {e:?}")))??;
@@ -263,7 +263,13 @@ pub fn bind_buffer(
 }
 
 #[jni_mangle("com.rajmani7584.payloaddumper.nativeHelper.PayloadDumper")]
-pub fn dump(mut env_u: EnvUnowned, _class: JClass, partition_id: jint, out: JString) -> jint {
+pub fn dump(
+    mut env_u: EnvUnowned,
+    _class: JClass,
+    partition_id: jint,
+    out: JString,
+    verify: jboolean,
+) -> jint {
     let o = env_u.with_env(|_env| -> Result<_, jni::errors::Error> {
         let b = panic::catch_unwind(|| -> AppResult<i32> {
             let engine_lock = ENGINE
@@ -320,35 +326,47 @@ pub fn dump(mut env_u: EnvUnowned, _class: JClass, partition_id: jint, out: JStr
                 .store(status::PENDING, std::sync::atomic::Ordering::Relaxed);
             a.progress.store(0, std::sync::atomic::Ordering::Relaxed);
             a.id.store(partition_id as u8, std::sync::atomic::Ordering::Relaxed);
+            a.abort.store(0, std::sync::atomic::Ordering::Relaxed);
 
             drop(download_session);
             drop(session_guard);
 
             let out = out.to_string();
 
-            let s: tokio::task::JoinHandle<Result<(), AppError>> =
+            let _s: tokio::task::JoinHandle<Result<(), AppError>> =
                 runtime_handle.spawn(async move {
-                    let _permit = semaphore
-                        .acquire()
-                        .await
-                        .map_err(|_| AppError::Other("Semaphore closed".to_string()))?;
-
                     let task = unsafe { &*(address_numeric as *mut DownloadTask) };
+                    let _permit = tokio::select! {
+                        permit = semaphore.acquire_owned() => {
+                            permit.map_err(|_| AppError::Other("Semaphore closed".to_string()))?
+                        }
+                        _ = async {
+                            loop {
+                                if task.abort.load(std::sync::atomic::Ordering::Relaxed) == 1 {
+                                    break;
+                                }
+                                tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                            }
+                        } => {
+                            task.status
+                                .store(status::FAILED, std::sync::atomic::Ordering::Relaxed);
+                            return Err(AppError::Other("Cancelled by user".to_string()));
+                        }
+                    };
 
                     task.id
                         .store(partition_id as u8, std::sync::atomic::Ordering::Relaxed);
                     task.status
                         .store(status::RUNNING, std::sync::atomic::Ordering::Relaxed);
-                    task.abort.store(0, std::sync::atomic::Ordering::Relaxed);
                     let mut dumper = PayloadDumper::new(payload)?;
 
-                    let out = PathBuf::from(out);
+                    let out_path = PathBuf::from(&out);
 
                     match dumper
                         .dump(
-                            partition,
+                            partition.clone(),
                             block_size,
-                            &out,
+                            &out_path,
                             header,
                             false,
                             Some(|p| {
@@ -362,9 +380,47 @@ pub fn dump(mut env_u: EnvUnowned, _class: JClass, partition_id: jint, out: JStr
                         )
                         .await
                     {
-                        Ok(_) => task
-                            .status
-                            .store(status::COMPLETED, std::sync::atomic::Ordering::Relaxed),
+                        Ok(_) => {
+                            if verify {
+                                if let Some(info) = partition.new_partition_info {
+                                    task.status.store(
+                                        status::VERIFYING,
+                                        std::sync::atomic::Ordering::Relaxed,
+                                    );
+                                    let calculated =
+                                        calculate_sha256_hash(&out, block_size as usize)?;
+                                    let expected_hash = info.hash();
+                                    if calculated != hex::encode(expected_hash) {
+                                        task.status.store(
+                                            status::VERIFICATION_FAILED,
+                                            std::sync::atomic::Ordering::Relaxed,
+                                        );
+                                        add_error(partition_id, "Hash mismatch".to_string());
+                                        return Err(AppError::Other("Hash mismatch".to_string()));
+                                    } else {
+                                        task.status.store(
+                                            status::COMPLETED,
+                                            std::sync::atomic::Ordering::Relaxed,
+                                        );
+                                    }
+                                } else {
+                                    task.status.store(
+                                        status::VERIFICATION_FAILED,
+                                        std::sync::atomic::Ordering::Relaxed,
+                                    );
+                                    add_error(
+                                        partition_id,
+                                        "Hash not found from metadata".to_string(),
+                                    );
+                                    return Err(AppError::Other(
+                                        "Hash not found from metadata".to_string(),
+                                    ));
+                                }
+                            }
+
+                            task.status
+                                .store(status::COMPLETED, std::sync::atomic::Ordering::Relaxed);
+                        }
                         Err(e) => {
                             add_error(partition_id, e.to_string());
                             task.status
@@ -376,12 +432,12 @@ pub fn dump(mut env_u: EnvUnowned, _class: JClass, partition_id: jint, out: JStr
 
                     Ok(())
                 });
-            let session_guard_reopen = engine_lock.read().unwrap();
-            if let Some(session_reopen) = session_guard_reopen.as_ref() {
-                let download_session_reopen = session_reopen.download_session.lock().unwrap();
-                let mut active_task_guard = download_session_reopen.active_task.lock().unwrap();
-                active_task_guard.insert(partition_id as u8, s);
-            }
+            // let session_guard_reopen = engine_lock.read().unwrap();
+            // if let Some(session_reopen) = session_guard_reopen.as_ref() {
+            //     let download_session_reopen = session_reopen.download_session.lock().unwrap();
+            //     let mut active_task_guard = download_session_reopen.active_task.lock().unwrap();
+            //     // active_task_guard.insert(partition_id as u8, s);
+            // }
 
             Ok(0)
         })
@@ -465,6 +521,27 @@ pub fn fetchDumpError(mut env_u: EnvUnowned, _class: JClass, id: jint) -> jstrin
         .into_raw()
 }
 
+#[jni_mangle("com.rajmani7584.payloaddumper.nativeHelper.PayloadDumper")]
+pub fn calculateHash(
+    mut env_u: EnvUnowned,
+    _class: JClass,
+    path: JString,
+    buf_size: jint,
+) -> jstring {
+    let o = env_u.with_env(|env| -> Result<_, jni::errors::Error> {
+        let b = panic::catch_unwind(|| -> AppResult<String> {
+            let path = path.to_string();
+            calculate_sha256_hash(&path, buf_size as usize)
+        })
+        .map_err(|e| AppError::Other(format!("Rust panicked: {e:?}")))??;
+
+        JString::from_str(env, &b)
+    });
+
+    o.resolve::<jni::errors::ThrowRuntimeExAndDefault>()
+        .into_raw()
+}
+
 impl Payload {
     fn from_type(p_type: u8, path: &str) -> AppResult<Self> {
         match p_type {
@@ -497,4 +574,21 @@ fn add_error(partition_id: jint, error: String) {
             }
         }
     }
+}
+
+fn calculate_sha256_hash(path: &str, buf_size: usize) -> AppResult<String> {
+    let mut hasher = Sha256::new();
+    let file = File::open(path)?;
+    let mut reader = BufReader::new(file);
+    let mut buf = vec![0; buf_size];
+    loop {
+        let bytes_read = reader.read(&mut buf)?;
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buf[..bytes_read]);
+    }
+    let new_hash = hex::encode(hasher.finalize());
+
+    Ok(new_hash)
 }

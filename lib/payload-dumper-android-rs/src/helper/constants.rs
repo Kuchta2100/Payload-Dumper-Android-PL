@@ -9,10 +9,13 @@ pub(crate) const BLOCK_SIZE: u32 = 4096;
 pub(crate) const PAYLOAD_HEADER_MAGIC: [u8; 4] = [b'C', b'r', b'A', b'U'];
 pub(crate) const ZIP_HEADER_MAGIC: [u8; 4] = [b'P', b'K', b'\x03', b'\x04'];
 
+#[allow(unused)]
 pub mod status {
     pub const IDLE: u8 = 0;
     pub const PENDING: u8 = 1;
     pub const RUNNING: u8 = 2;
     pub const COMPLETED: u8 = 3;
     pub const FAILED: u8 = 4;
+    pub const VERIFYING: u8 = 5;
+    pub const VERIFICATION_FAILED: u8 = 6;
 }

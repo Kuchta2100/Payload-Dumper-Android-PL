@@ -1,10 +1,6 @@
-use std::path::PathBuf;
 
 use crate::{
-    helper::{
-        constants::BLOCK_SIZE,
-        errors::{AppError, AppResult},
-    },
+    helper::errors::AppResult,
     payload::Payload,
 };
 
@@ -15,7 +11,7 @@ mod reader;
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
-    let payload = Payload::from_file("/home/rajmani/otas/c344950e5349e27118c73340703ea15a.zip");
+    let payload = Payload::from_file("/home/rajmani/otas/lr83XRvh8xjbCD4YBFyCIWIsuc1I.zip");
 
     // let payload = Payload::from_url(
     //     "http://10.223.107.181:3000/Files%20by%20Google/lr83XRvh8xjbCD4YBFyCIWIsuc1I.zip",
@@ -70,32 +66,21 @@ async fn main() -> AppResult<()> {
 
     let mut dumper = payload::PayloadDumper::new(payload.clone())?;
 
-    let header = dumper.get_header()?;
-    let manifest = dumper.get_part_manifest()?;
+    let _header = dumper.get_header()?;
+    let manifest = dumper.get_manifest()?;
 
-    let partition = manifest
-        .partitions
-        .iter()
-        .find(|p| p.partition_name == "boot")
-        .ok_or(AppError::Other("Boot partition not found".to_string()))?;
+    for p in manifest.partitions {
+        let partition_name = p.partition_name;
 
-    if partition.incremental {
-        panic!("incremental");
+        let len = p.operations.iter().fold(0, |a, b| a + b.data_length());
+
+        println!(
+            "{}: {} B -> {} B",
+            partition_name,
+            len,
+            p.new_partition_info.unwrap().size()
+        );
     }
-
-    dumper
-        .dump(
-            partition.clone(),
-            manifest.block_size.unwrap_or(BLOCK_SIZE) as u64,
-            &PathBuf::from("./out").join("boot.img"),
-            header,
-            false,
-            Some(|p| {
-                println!("{p}%\r");
-                true
-            }),
-        )
-        .await?;
 
     Ok(())
 }

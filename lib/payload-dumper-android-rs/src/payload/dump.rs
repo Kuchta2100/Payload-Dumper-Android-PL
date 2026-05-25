@@ -13,6 +13,7 @@ use crate::{
 };
 
 impl PayloadDumper {
+    #[allow(unused)]
     pub async fn dump<F>(
         &mut self,
         partition: UpdateInfo,
@@ -36,17 +37,25 @@ impl PayloadDumper {
             }
 
             let dst_extent = op.dst_extents[0];
-            let offset = op
-                .data_offset
-                .ok_or_else(|| AppError::Other("Invalid operation".into()))?
-                + header.data_offset();
-            let data_len = op
-                .data_length
-                .ok_or_else(|| AppError::Other("Invalid operation".into()))?;
-            let exp_size = dst_extent
-                .num_blocks
-                .ok_or_else(|| AppError::Other("Invalid operation".into()))?
-                * block_size;
+
+            let offset = op.data_offset.ok_or_else(|| {
+                AppError::Other(format!(
+                    "Data offset for {} not found",
+                    partition.partition_name
+                ))
+            })? + header.data_offset();
+            let data_len = op.data_length.ok_or_else(|| {
+                AppError::Other(format!(
+                    "Data length for {} not found",
+                    partition.partition_name
+                ))
+            })?;
+            let exp_size = dst_extent.num_blocks.ok_or_else(|| {
+                AppError::Other(format!(
+                    "Number of blocks for {} not found",
+                    partition.partition_name
+                ))
+            })? * block_size;
 
             let mut sha256 = sha2::Sha256::new();
 
@@ -81,7 +90,7 @@ impl PayloadDumper {
                 }
                 _ => {
                     return Err(AppError::Other(format!(
-                        "Unsupported operation type: {:?}",
+                        "Unsupported operation type: {:?} (Is this an incremental payload?)",
                         op.r#type()
                     )));
                 }
@@ -97,7 +106,7 @@ impl PayloadDumper {
             completed_ops += 1;
             if let Some(ref on_progress) = on_progress {
                 if !on_progress((completed_ops as f64 / total_ops as f64 * 100.0) as usize) {
-                    return Err(AppError::Other("Cancelled by user".to_string()));
+                    return Err(AppError::Other("Cancelled by user".into()));
                 }
             }
 

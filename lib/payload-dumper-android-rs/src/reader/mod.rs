@@ -3,12 +3,17 @@ pub(crate) mod macros;
 mod remote_reader;
 pub(crate) mod zip_reader;
 
-use std::io::{self, Read, Seek};
+use std::io::{self, Read, Seek, SeekFrom};
 
 use crate::{
-    helper::errors::AppResult,
+    helper::{
+        constants::{PAYLOAD_HEADER_MAGIC, ZIP_HEADER_MAGIC},
+        errors::{AppError, AppResult},
+    },
     payload::Payload,
-    reader::{local_reader::LocalPayloadReader, remote_reader::RemotePayloadReader},
+    reader::{
+        local_reader::LocalPayloadReader, remote_reader::RemotePayloadReader, zip_reader::ZipReader,
+    },
 };
 
 pub(crate) struct PayloadReader {
@@ -39,28 +44,47 @@ impl Reader for PayloadReader {
 }
 
 impl PayloadReader {
-    pub fn new(payload: Payload) -> AppResult<Self> {
+    pub fn new(payload: Payload, buf_size: usize) -> AppResult<Self> {
         match payload {
-            Payload::File(path) => Self::from_file(&path),
-            Payload::Url(url) => Self::from_url(&url),
+            Payload::File(path) => Self::from_file(&path, buf_size),
+            Payload::Url(url) => Self::from_url(&url, buf_size),
         }
     }
-    fn from_file(path: &str) -> AppResult<Self> {
+    fn from_file(path: &str, buf_size: usize) -> AppResult<Self> {
         Ok(Self {
-            inner: Box::new(LocalPayloadReader::new(path)?),
+            inner: Box::new(LocalPayloadReader::new(path, buf_size)?),
             base_offset: 0,
             size: None,
             position: 0,
         })
     }
 
-    fn from_url(url: &str) -> AppResult<Self> {
+    fn from_url(url: &str, buf_size: usize) -> AppResult<Self> {
         Ok(Self {
-            inner: Box::new(RemotePayloadReader::new(url)?),
+            inner: Box::new(RemotePayloadReader::new(url, buf_size)?),
             base_offset: 0,
             size: None,
             position: 0,
         })
+    }
+
+    pub(crate) fn calculate_offset(mut self) -> AppResult<Self> {
+        let mut buf = [0u8; 4];
+        self.seek(SeekFrom::Start(0))?;
+        self.read(&mut buf)?;
+        let len = self.len();
+
+        if buf == PAYLOAD_HEADER_MAGIC {
+            return self.with_offset(0, len);
+        }
+
+        if buf == ZIP_HEADER_MAGIC {
+            let mut zip_reader = ZipReader::new(&mut self);
+            let offset = zip_reader.payload_offset()?;
+            return self.with_offset(offset, len);
+        }
+
+        Err(AppError::Other("Invalid payload header".into()))
     }
 }
 impl PayloadReader {

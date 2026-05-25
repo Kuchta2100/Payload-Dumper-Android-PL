@@ -7,7 +7,7 @@ use ureq::Agent;
 
 use crate::{
     helper::{
-        constants::{BUF_SIZE, MAX_RETRIES, READ_TIMEOUT, REQUEST_TIMEOUT},
+        constants::{MAX_RETRIES, READ_TIMEOUT, REQUEST_TIMEOUT},
         errors::{AppError, AppResult},
     },
     reader::Reader,
@@ -28,7 +28,7 @@ pub(crate) struct RemotePayloadReader {
 }
 
 impl RemotePayloadReader {
-    pub(crate) fn new(url: impl Into<String>) -> AppResult<Self> {
+    pub(crate) fn new(url: impl Into<String>, buf_size: usize) -> AppResult<Self> {
         let agent = ureq::Agent::config_builder()
             .timeout_connect(Some(std::time::Duration::from_secs(REQUEST_TIMEOUT)))
             .timeout_recv_response(Some(std::time::Duration::from_secs(READ_TIMEOUT)))
@@ -42,7 +42,7 @@ impl RemotePayloadReader {
             response_reader: None,
             offset: 0,
             total_size: None,
-            buffer: vec![0; BUF_SIZE],
+            buffer: vec![0; buf_size],
             buffer_start: 0,
             buffer_pos: 0,
             buffer_len: 0,
@@ -77,14 +77,14 @@ impl RemotePayloadReader {
         };
 
         if self.offset > 0 && status.as_u16() != 206 {
-            return Err(AppError::Other("Range not supported!".to_string()));
+            return Err(AppError::Other("Range not supported!".into()));
         }
 
         let headers = response.headers();
         if let Some(content_range) = headers.get("Content-Range") {
             if let Some(total) = content_range
                 .to_str()
-                .map_err(|_| AppError::Other("Can't get content range".to_string()))?
+                .map_err(|_| AppError::Other("Can't get content range".into()))?
                 .split("/")
                 .nth(1)
             {
@@ -95,7 +95,7 @@ impl RemotePayloadReader {
         } else if let Some(content_length) = headers.get("Content-Length") {
             if let Ok(len) = content_length
                 .to_str()
-                .map_err(|_| AppError::Other("Can't get content length".to_string()))?
+                .map_err(|_| AppError::Other("Can't get content length".into()))?
                 .parse::<u64>()
             {
                 self.total_size = Some(len);
@@ -123,7 +123,7 @@ impl RemotePayloadReader {
             let reader = self
                 .response_reader
                 .as_mut()
-                .ok_or_else(|| AppError::Other("Missing response reader".to_string()))?;
+                .ok_or(AppError::Other("Missing response reader".into()))?;
 
             match reader.read(&mut self.buffer) {
                 Ok(0) => {
@@ -161,12 +161,12 @@ impl RemotePayloadReader {
         self.retries += 1;
 
         if self.retries > MAX_RETRIES {
-            return Err(AppError::Other("max retries exceeded".to_string()));
+            return Err(AppError::Other("max retries exceeded".into()));
         }
 
         let delay = std::time::Duration::from_millis(5000 * self.retries as u64);
         println!(
-            "Conn lost, retrying in {:?} reconnect {}/{}..",
+            "Conn lost, retrying in {:?} reconnect {}/{}",
             delay, self.retries, MAX_RETRIES
         );
 

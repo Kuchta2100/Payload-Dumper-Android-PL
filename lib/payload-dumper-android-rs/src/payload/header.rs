@@ -26,8 +26,8 @@ impl PayloadHeader {
 
         if magic != PAYLOAD_HEADER_MAGIC {
             return Err(AppError::Other(format!(
-                "Invalid payload magic `{}`",
-                str::from_utf8(&magic).unwrap_or("")
+                "Invalid payload magic: {:?}",
+                magic
             )));
         }
 
@@ -51,6 +51,7 @@ impl PayloadHeader {
         Self::size() as u64 + self.manifest_len
     }
 
+    #[allow(unused)]
     pub(crate) fn data_offset(&self) -> u64 {
         self.signature_len as u64 + self.signature_offset()
     }

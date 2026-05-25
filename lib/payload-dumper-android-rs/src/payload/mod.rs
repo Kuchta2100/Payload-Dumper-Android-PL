@@ -11,11 +11,11 @@ use crate::{
         part_manifest::{DstExtent, Operation, PartInfo, PartManifest, UpdateInfo},
     },
     helper::{
-        constants::{PAYLOAD_HEADER_MAGIC, ZIP_HEADER_MAGIC},
+        constants::BUF_SIZE,
         errors::{AppError, AppResult},
     },
     payload::header::PayloadHeader,
-    reader::{PayloadReader, Reader, zip_reader::ZipReader},
+    reader::PayloadReader,
 };
 
 #[derive(Clone)]
@@ -24,6 +24,7 @@ pub enum Payload {
     Url(String),
 }
 impl Payload {
+    #[allow(dead_code)]
     pub fn from_url(url: &str) -> Self {
         Self::Url(url.to_string())
     }
@@ -33,6 +34,7 @@ impl Payload {
 }
 
 pub struct PayloadDumper {
+    payload: Payload,
     reader: PayloadReader,
     header: Option<PayloadHeader>,
     manifest: Option<DeltaArchiveManifest>,
@@ -42,22 +44,25 @@ pub struct PayloadDumper {
 #[allow(dead_code)]
 impl PayloadDumper {
     pub fn new(payload: Payload) -> AppResult<Self> {
-        let mut reader = PayloadReader::new(payload)?;
-        let mut buf = [0u8; 4];
-        let _ = reader.read(&mut buf);
-        let len = reader.len();
+        let mut reader = PayloadReader::new(payload.clone(), BUF_SIZE)?;
 
-        if buf == PAYLOAD_HEADER_MAGIC {
-            reader = reader.with_offset(0, len)?;
-        } else if buf == ZIP_HEADER_MAGIC {
-            let mut zip_reader = ZipReader::new(&mut reader);
-            let offset = zip_reader.payload_offset()?;
-            reader = reader.with_offset(offset, len)?;
-        } else {
-            return Err(AppError::Other("Invalid payload header".into()));
-        }
+        reader = reader.calculate_offset()?;
 
         Ok(Self {
+            payload,
+            reader,
+            header: None,
+            manifest: None,
+            signatures: None,
+        })
+    }
+    pub fn with_buf_size(payload: Payload, buf_size: usize) -> AppResult<Self> {
+        let mut reader = PayloadReader::new(payload.clone(), buf_size)?;
+
+        reader = reader.calculate_offset()?;
+
+        Ok(Self {
+            payload,
             reader,
             header: None,
             manifest: None,
@@ -148,11 +153,19 @@ impl PayloadDumper {
                     })
                     .collect::<Vec<Operation>>();
 
+                let download_size = match self.payload {
+                    Payload::File(_) => None,
+                    Payload::Url(_) => {
+                        Some(p.operations.iter().fold(0, |a, b| a + b.data_length()))
+                    }
+                };
+
                 Some(UpdateInfo {
                     partition_name: p.partition_name.clone(),
                     new_partition_info: info,
                     operations,
                     incremental: p.old_partition_info.is_some(),
+                    download_size,
                 })
             })
             .collect::<Vec<UpdateInfo>>();

@@ -4,6 +4,7 @@ fn main() {
     let path = PathBuf::from(".");
 
     println!("Cargo:rerun-if-changed=update_metadata.proto");
+    println!("Cargo:rerun-if-changed=part_manifest.proto");
 
     prost_build::Config::new()
         .out_dir(path.join("src/engine").canonicalize().unwrap())
