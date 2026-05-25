@@ -44,39 +44,37 @@ object Utils {
             }
         }
     }
-    fun setupOutDir(outDir: String, counter: Int): String {
-        val appDirectory = File("$outDir${if (counter == 0) "" else "(${counter})"}")
-        if (!appDirectory.exists()) {
-            return appDirectory.absolutePath
-        } else if (!appDirectory.isDirectory) {
-            return setupOutDir(outDir, counter + 1)
-        }
-        return appDirectory.absolutePath
-    }
     fun setupPartitionName(
         outputDirectory: String,
         partitionName: String,
-        counter: Int
+        overwrite: Boolean,
+        counter: Int = 0
     ): String {
         val outDir = File(outputDirectory)
         if (!outDir.exists()) outDir.mkdirs()
-        val partition =
-            File(outDir, "${partitionName}${if (counter == 0) "" else "(${counter})"}.img")
+        val partition = File(outDir, "${partitionName}${if (counter == 0) "" else "(${counter})"}.img")
+
+        if (overwrite) return "${outputDirectory}/${partition.name}"
         return if (!partition.exists()) {
             "${outputDirectory}/${partition.name}"
         } else {
-            setupPartitionName(outputDirectory, partitionName, counter + 1)
+            setupPartitionName(outputDirectory, partitionName, false, counter + 1)
         }
     }
 
     fun parseSize(bytes: Long): String = when {
-        bytes < 1000 ->
+        bytes < 1024 ->
             "$bytes B"
-        bytes < 1000L * 1000 ->
+        bytes < 1024L * 1024 ->
             "%.2f KB".format(bytes / 1000.0)
-        bytes < 1000L * 1000 * 1000 ->
-            "%.2f MB".format(bytes / (1000.0 * 1000))
+        bytes < 1024L * 1024 * 1024 ->
+            "%.2f MB".format(bytes / (1024.0 * 1024))
         else ->
-            "%.2f GB".format(bytes / (1000.0 * 1000 * 1000))
+            "%.2f GB".format(bytes / (1024.0 * 1024 * 1024))
+    }
+
+    fun parseBufSize(kbyte: Int): String = when {
+        kbyte < 1024 -> "$kbyte KB"
+        else -> "${kbyte / 1024} MB"
     }
 }

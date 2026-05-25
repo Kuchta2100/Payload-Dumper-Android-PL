@@ -190,7 +190,7 @@ internal object ButtonDefaults {
     internal val MinHeight = 44.dp
     internal val OutlineHeight = 1.dp
     private val ButtonHorizontalPadding = 16.dp
-    private val ButtonVerticalPadding = 4.dp
+    private val ButtonVerticalPadding = 8.dp
     private val ButtonShape = CircleShape //RoundedCornerShape(12)
 
     val contentPadding =

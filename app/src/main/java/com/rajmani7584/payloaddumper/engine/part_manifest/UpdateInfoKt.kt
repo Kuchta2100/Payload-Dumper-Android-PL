@@ -152,7 +152,31 @@ public object UpdateInfoKt {
     }
 
     /**
-     * `required bool incremental = 4;`
+     * `optional uint64 download_size = 4;`
+     */
+    public var downloadSize: kotlin.Long
+      @kotlin.jvm.JvmName("getDownloadSize")
+        get() = _builder.downloadSize
+      @kotlin.jvm.JvmName("setDownloadSize")
+        set(value) {
+        _builder.downloadSize = value
+      }
+    /**
+     * `optional uint64 download_size = 4;`
+     */
+    public fun clearDownloadSize() {
+      _builder.clearDownloadSize()
+    }
+    /**
+     * `optional uint64 download_size = 4;`
+     * @return Whether the downloadSize field is set.
+     */
+    public fun hasDownloadSize(): kotlin.Boolean {
+      return _builder.hasDownloadSize()
+    }
+
+    /**
+     * `required bool incremental = 5;`
      */
     public var incremental: kotlin.Boolean
       @kotlin.jvm.JvmName("getIncremental")
@@ -162,13 +186,13 @@ public object UpdateInfoKt {
         _builder.incremental = value
       }
     /**
-     * `required bool incremental = 4;`
+     * `required bool incremental = 5;`
      */
     public fun clearIncremental() {
       _builder.clearIncremental()
     }
     /**
-     * `required bool incremental = 4;`
+     * `required bool incremental = 5;`
      * @return Whether the incremental field is set.
      */
     public fun hasIncremental(): kotlin.Boolean {

@@ -14,8 +14,8 @@ import com.rajmani7584.payloaddumper.ui.customviews.ScreenTopBar
 fun AnalyzeScreen() {
 
     Scaffold(topBar = { ScreenTopBar(title = "Analyzer") }) { innerPadding ->
-        Box(Modifier.padding(innerPadding).fillMaxSize()) {
-            Text("Analyzer")
+        Box(Modifier.padding(top = innerPadding.calculateTopPadding()).fillMaxSize()) {
+            Text("Analyzer - coming soon...")
         }
     }
 }

@@ -130,9 +130,6 @@ internal fun TopBarLayout(
             Modifier
         }
 
-    // calculating based on scrolling behaviour
-    val dynamicHeight = height.intValue + (scrollBehavior?.state?.heightOffset ?: 0).toInt()
-
     Surface(modifier = modifier.then(topBarDragModifier), color = topBarContainerColor) {
         CompositionLocalProvider(LocalContentColor provides topBarContentColor) {
             Layout(
@@ -151,8 +148,14 @@ internal fun TopBarLayout(
                     throw IllegalStateException("TopBar expects one child!")
                 }
 
-                if (height.intValue == 0) height.intValue = placeables.first().height
+                val measuredHeight = placeables.first().height
+                if (height.intValue == 0) {
+                    height.intValue = measuredHeight
+                    scrollBehavior?.state?.heightOffsetLimit = -measuredHeight.toFloat()
+                }
 
+                val dynamicHeight = (measuredHeight + (scrollBehavior?.state?.heightOffset ?: 0f).toInt())
+                    .coerceIn(0, measuredHeight)
                 layout(constraints.maxWidth, dynamicHeight) {
                     // Expects only one child, a layout with topbar content
                     placeables.first().place(0, dynamicHeight - height.intValue)

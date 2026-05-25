@@ -25,7 +25,7 @@
     <string name="selector_screen_invalid_path">文件夹不存在</string>
     <string name="selector_empty">文件夹空!</string>
     <string name="selector_no_permission">没有读取权限!</string>
-    <string name="settings_concurrency">并发任务数</string>
+    <string name="settings_concurrency">并发任务数 : %1$s</string>
     <string name="settings_default_view">默认视图</string>
     <string name="settings_view_list">列表</string>
     <string name="settings_view_grid">网格</string>
@@ -41,5 +41,5 @@
     <string name="settings_about_source_code">源代码</string>
     <string name="settings_about_github">\@GitHub</string>
     <string name="settings_about_github_main_page">GitHub</string>
-    <string name="settings_about_github_username">\@Rajmani7584</string>
+    <string name="settings_about_github_username">\Rajmani7584</string>
 </resources>

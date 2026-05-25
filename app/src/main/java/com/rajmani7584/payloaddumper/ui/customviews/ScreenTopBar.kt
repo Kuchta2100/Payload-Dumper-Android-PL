@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rajmani7584.payloaddumper.ui.components.AppTheme
 import com.rajmani7584.payloaddumper.ui.components.components.IconButton
@@ -29,20 +30,28 @@ fun ScreenTopBar(title: String, modifier: Modifier = Modifier, scrollBehavior: T
     TopBar(
         modifier = modifier,
         scrollBehavior = scrollBehavior,
-        colors = TopBarColors(containerColor = Color.Transparent, scrolledContainerColor = Color.Transparent)
+        colors = TopBarColors(
+            containerColor = Color.Transparent,
+            scrolledContainerColor = Color.Transparent
+        )
     ) {
         Row(
             Modifier
                 .fillMaxSize()
                 .padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             if (nav)
                 IconButton(variant = IconButtonVariant.Ghost, onClick = onNavClick) {
                     Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Go Back")
                 }
-            Text(title, style = AppTheme.typography.h2)
+            Text(
+                title,
+                style = AppTheme.typography.h2,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
             Spacer(Modifier.weight(1f))
             actions()
         }

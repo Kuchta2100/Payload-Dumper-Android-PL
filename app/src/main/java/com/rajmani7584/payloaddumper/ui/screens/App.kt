@@ -14,20 +14,18 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteItem
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.rajmani7584.payloaddumper.ui.components.AppTheme
+import com.rajmani7584.payloaddumper.ui.components.LocalColors
 import kotlinx.coroutines.launch
 
 
@@ -54,58 +52,42 @@ fun App() {
 }
 
 @Composable
-fun AppLayout(appNavController: NavHostController, homeNavController: NavHostController) {
+fun AppLayout(
+    appNavController: NavHostController,
+    homeNavController: NavHostController
+) {
+
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState(0) { 4 }
+
+    val navItems = listOf("Home", "Logs", "Analyzer", "Settings")
+
     NavigationSuiteScaffold(
-        containerColor = Color.Transparent,
-        navigationSuiteColors = NavigationSuiteDefaults.colors(navigationBarContainerColor = AppTheme.colors.surface),
+//        navigationSuiteColors = NavigationSuiteDefaults.colors(navigationBarContainerColor = AppTheme.colors.surface),
         navigationItems = {
-            NavigationSuiteItem(
-                selected = pagerState.currentPage == 0,
-                onClick = {
-                    coroutineScope.launch {
-                        if (pagerState.currentPage == 0) {
-                            homeNavController.popBackStack(Screens.Home.route, false)
-                        } else {
-                            pagerState.animateScrollToPage(0)
+            navItems.forEachIndexed { index, name ->
+                val icon = when (index) {
+                    0 -> Icons.Default.Home
+                    1 -> Icons.Default.Terminal
+                    2 -> Icons.Default.FindInPage
+                    3 -> Icons.Default.Settings
+                    else -> Icons.Default.Home
+                }
+                val color = if (pagerState.currentPage == index) LocalColors.current.error else LocalColors.current.onSurface
+                NavigationSuiteItem(
+                    selected = pagerState.currentPage == index,
+                    onClick = {
+                        coroutineScope.launch {
+                            if (pagerState.currentPage == index && index == 0) {
+                                homeNavController.popBackStack(Screens.Home.route, false)
+                            } else {
+                                pagerState.animateScrollToPage(index)
+                            }
                         }
-                    }
-                },
-                icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                label = { Text("Home") })
-            NavigationSuiteItem(
-                selected = pagerState.currentPage == 1,
-                onClick = {
-                    coroutineScope.launch { pagerState.animateScrollToPage(1) }
-                },
-                icon = {
-                    Icon(
-                        Icons.Default.Terminal,
-                        contentDescription = "Logs"
-                    )
-                },
-                label = { Text("Logs") })
-            NavigationSuiteItem(
-                selected = pagerState.currentPage == 2,
-                onClick = {
-                    coroutineScope.launch { pagerState.animateScrollToPage(2) }
-                },
-                icon = {
-                    Icon(
-                        Icons.Default.FindInPage,
-                        contentDescription = "Analyzer"
-                    )
-                },
-                label
-                = { Text("Analyze") })
-            NavigationSuiteItem(
-                selected = pagerState.currentPage == 3,
-                onClick = {
-                    coroutineScope.launch { pagerState.animateScrollToPage(3) }
-                },
-                icon = { Icon(Icons.Default.Settings, contentDescription = "Setting") },
-                label = { Text("Setting") })
+                    },
+                    icon = { Icon(icon, contentDescription = name, tint = color) },
+                    label = { Text(name, color = color) })
+            }
         }
     ) {
         Box(Modifier.fillMaxSize()) {

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -16,6 +17,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import com.rajmani7584.payloaddumper.ui.components.AppTheme
+import com.rajmani7584.payloaddumper.ui.components.LocalColors
 import com.rajmani7584.payloaddumper.ui.components.contentColorFor
 import com.rajmani7584.payloaddumper.ui.components.foundation.systemBarsForVisualComponents
 import kotlin.jvm.JvmInline
@@ -28,8 +30,8 @@ fun Scaffold(
     snackbarHost: @Composable () -> Unit = {},
     floatingActionButton: @Composable () -> Unit = {},
     floatingActionButtonPosition: FabPosition = FabPosition.End,
-    containerColor: Color = AppTheme.colors.transparent,
-    contentColor: Color = contentColorFor(containerColor),
+    containerColor: Color = LocalColors.current.background,
+    contentColor: Color = LocalColors.current.onBackground,
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     content: @Composable (PaddingValues) -> Unit,
 ) {

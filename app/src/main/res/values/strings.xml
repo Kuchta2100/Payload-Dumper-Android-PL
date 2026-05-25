@@ -25,8 +25,8 @@
     <string name="raw_data_loading">Loading…</string>
     <string name="selector_screen_invalid_path">This directory doesn\'t exists</string>
     <string name="selector_empty">Directory Empty!</string>
-    <string name="selector_no_permission">No read Permision Here!</string>
-    <string name="settings_concurrency">Concurrency</string>
+    <string name="selector_no_permission">No read permission Here!</string>
+    <string name="settings_concurrency">Concurrency: %1$s</string>
     <string name="settings_default_view">Default View</string>
     <string name="settings_view_list">List</string>
     <string name="settings_view_grid">Grid</string>
@@ -42,5 +42,5 @@
     <string name="settings_about_source_code">Source Code</string>
     <string name="settings_about_github">\@GitHub</string>
     <string name="settings_about_github_main_page">GitHub</string>
-    <string name="settings_about_github_username">\@Rajmani7584</string>
+    <string name="settings_about_github_username">\Rajmani7584</string>
 </resources>

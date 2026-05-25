@@ -14,15 +14,16 @@ android {
         applicationId = "com.rajmani7584.payloaddumper"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 20260526
+        versionName = "5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -35,6 +36,15 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 }
 
@@ -65,4 +75,6 @@ dependencies {
     implementation(libs.composables)
 
     implementation(libs.protobuf.kotlin)
+
+//    implementation(libs.compose.markdown)
 }

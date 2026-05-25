@@ -4,8 +4,9 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import com.rajmani7584.payloaddumper.ui.theme.LightColorScheme
 
-val Black: Color = Color(0xFF1B1B1B)
+val Black: Color = Color(0xFF000000)
 val Gray900: Color = Color(0xFF282828)
 val Gray800: Color = Color(0xFF4b4b4b)
 val Gray700: Color = Color(0xFF5e5e5e)
@@ -13,7 +14,7 @@ val Gray600: Color = Color(0xFF727272)
 val Gray500: Color = Color(0xFF868686)
 val Gray400: Color = Color(0xFFC7C7C7)
 val Gray300: Color = Color(0xFFDFDFDF)
-val Gray200: Color = Color(0xFFF2F2F2)
+val Gray200: Color = Color(0xFFE2E2E2)
 val Gray100: Color = Color(0xFFF7F7F7)
 val Gray50: Color = Color(0xFFFFFFFF)
 val White: Color = Color(0xFFFFFFFF)
@@ -79,7 +80,6 @@ data class Colors(
     val textDisabled: Color,
     val scrim: Color,
     val elevation: Color,
-    val primaryContainer: Color
 )
 
 internal val LightColors =
@@ -90,7 +90,7 @@ internal val LightColors =
         onSecondary = Black,
         tertiary = Blue900,
         onTertiary = White,
-        surface = White,
+        surface = Gray200,
         onSurface = Black,
         error = Red600,
         onError = White,
@@ -109,8 +109,6 @@ internal val LightColors =
         textDisabled = Gray400,
         scrim = Color.Black.copy(alpha = 0.32f),
         elevation = Gray700,
-        primaryContainer = Blue900
-
     )
 
 internal val DarkColors =
@@ -140,10 +138,9 @@ internal val DarkColors =
         textDisabled = Gray600,
         scrim = Color.Black.copy(alpha = 0.72f),
         elevation = Gray200,
-        primaryContainer = Blue900
     )
 
-val LocalColors = staticCompositionLocalOf { LightColors }
+val LocalColors = staticCompositionLocalOf { LightColorScheme }
 val LocalContentColor = compositionLocalOf { Color.Black }
 val LocalContentAlpha = compositionLocalOf { 1f }
 

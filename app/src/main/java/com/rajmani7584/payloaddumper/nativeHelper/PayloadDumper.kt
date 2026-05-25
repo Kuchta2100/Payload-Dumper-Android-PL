@@ -1,21 +1,25 @@
 package com.rajmani7584.payloaddumper.nativeHelper
 
+import androidx.annotation.Keep
 import com.rajmani7584.payloaddumper.engine.chromeos_update_engine.UpdateMetadata
 import com.rajmani7584.payloaddumper.engine.part_manifest.PartManifestOuterClass
+import com.rajmani7584.payloaddumper.model.BufSize
 import com.rajmani7584.payloaddumper.model.PayloadType
 import java.nio.ByteBuffer
 
+@Keep
 object PayloadDumper {
 
     private external fun initSession(): Int
-    private external fun openPayload(pType: Int, path: String, concurrency: Int): Int
+    private external fun openPayload(pType: Int, path: String, concurrency: Int, bufSize: Int): ByteArray
     private external fun fetchHeader(): String
     private external fun fetchPartManifest(): ByteArray
     private external fun fetchSignatures(): ByteArray
     private external fun bindBuffer(taskCount: Int, address: ByteBuffer): Int
-    private external fun dump(id: Int, out: String): Int
+    private external fun dump(id: Int, out: String, verifyHash: Boolean): Int
     private external fun fetchDumpError(id: Int): String
     private external fun cancelDump(id: Int): Int
+    private external fun calculateHash(path: String, bufSize: Int): String
 
     init {
         System.loadLibrary("payload_dumper")
@@ -30,10 +34,12 @@ object PayloadDumper {
         }
     }
 
-    fun open(payloadType: PayloadType): Result<Int> {
+    fun open(payloadType: PayloadType, concurrency: Int, bufSize: BufSize): Result<PartManifestOuterClass.PartManifest> {
         try {
-            val i = openPayload(payloadType.getTypeInt(), payloadType.getPathString(), 4)
-            return Result.success(i)
+            val b = openPayload(payloadType.getTypeInt(), payloadType.getPathString(), concurrency, bufSize.code * 1024)
+            val manifest = PartManifestOuterClass.PartManifest.parseFrom(b)
+
+            return Result.success(manifest)
         } catch (e: Exception) {
             return Result.failure(e)
         }
@@ -78,9 +84,9 @@ object PayloadDumper {
             return Result.failure(e)
         }
     }
-    fun dumpPart(id: Int, out: String): Result<Int> {
+    fun dumpPart(id: Int, out: String, verifyHash: Boolean): Result<Int> {
         try {
-            val b = dump(id, out)
+            val b = dump(id, out, verifyHash)
 
             return Result.success(b)
         } catch (e: Exception) {
@@ -100,6 +106,15 @@ object PayloadDumper {
     fun cancelPart(id: Int): Result<Int> {
         try {
             val b = cancelDump(id)
+            return Result.success(b)
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+    }
+
+    fun getHash(path: String, bufSize: BufSize): Result<String> {
+        try {
+            val b = calculateHash(path, bufSize.code * 1024)
             return Result.success(b)
         } catch (e: Exception) {
             return Result.failure(e)

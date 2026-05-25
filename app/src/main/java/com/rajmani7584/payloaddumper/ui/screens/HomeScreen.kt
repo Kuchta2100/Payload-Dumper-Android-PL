@@ -24,11 +24,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -38,7 +40,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.rajmani7584.payloaddumper.LocalSettings
 import com.rajmani7584.payloaddumper.MainActivity
+import com.rajmani7584.payloaddumper.R
 import com.rajmani7584.payloaddumper.model.DataModel
 import com.rajmani7584.payloaddumper.model.PayloadState
 import com.rajmani7584.payloaddumper.model.PayloadType
@@ -84,6 +88,7 @@ fun HomeScreenUI(
     homeNavController: NavHostController
 ) {
     val dataModel: DataModel = viewModel(LocalActivity.current as MainActivity)
+    val settings by LocalSettings.current.settings.collectAsState()
 
     LaunchedEffect(Unit) {
         dataModel.navEvent.collect {
@@ -98,7 +103,7 @@ fun HomeScreenUI(
 
     Scaffold(
         topBar = { ScreenTopBar(title = "Payload Dumper") }) { innerPadding ->
-        Box(Modifier.padding(innerPadding).fillMaxSize()) {
+        Box(Modifier.padding(top = innerPadding.calculateTopPadding()).fillMaxSize()) {
             Column(
                 Modifier.align(Alignment.Center),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -115,15 +120,24 @@ fun HomeScreenUI(
                                 )
                             )
                             Spacer(Modifier.height(24.dp))
-                            Button(text = "Select a file", onClick = {
-                                appNavController.navigate(Screens.Selector.createRoute(false)) {
-                                    popUpTo(Screens.Home.route) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
+                            dataModel.hasPermission.value?.let {
+                                if (!it) {
+                                    val activity = LocalActivity.current
+                                    Button(text = stringResource(R.string.first_start_allow_file_access), onClick = {
+                                        if (activity == null) return@Button
+                                        dataModel.requestPermission(activity)
+                                    })
                                 }
-                            })
-
+                                else
+                                    Button(text = "Select a file", onClick = {
+                                        appNavController.navigate(Screens.Selector.createRoute(false)) {
+                                            popUpTo(Screens.Home.route) {
+                                                saveState = true
+                                            }
+                                            launchSingleTop = true
+                                        }
+                                    })
+                            }
                         }
                         Spacer(Modifier.height(24.dp))
 
@@ -151,7 +165,7 @@ fun HomeScreenUI(
                                 },
                                 modifier = Modifier.align(Alignment.CenterHorizontally)
                                     .padding(vertical = 12.dp),
-                                text = "Fetch from remote"
+                                text = "Fetch"
                             )
                         }
                         Spacer(Modifier.height(24.dp))
@@ -159,7 +173,7 @@ fun HomeScreenUI(
                             Row(
                                 modifier = Modifier.widthIn(Dp.Unspecified, 540.dp).fillMaxWidth(.8f)
                                     .clip(RoundedCornerShape(8.dp)).background(
-                                        AppTheme.colors.primary.copy(alpha = .05f)
+                                        AppTheme.colors.primary.copy(alpha = .1f)
                                     ).clickable {
                                         homeNavController.navigate(Screens.Extract.route) {
                                             popUpTo(Screens.Home.route) {
@@ -185,7 +199,7 @@ fun HomeScreenUI(
                             }
                         }
                         if (payloadState is PayloadState.Error) {
-                            Box(Modifier.widthIn(840.dp).fillMaxWidth(.85f)) {
+                            Box(Modifier.widthIn(Dp.Unspecified, 840.dp).fillMaxWidth(.75f)) {
                                 Text(
                                     payloadState.message,
                                     color = Color.Red,

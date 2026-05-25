@@ -35,7 +35,7 @@ class ExplorerModel: ViewModel() {
     val list: State<List<FileData>> = _list
 
     private val _showAll = mutableStateOf(false)
-    val showAll: State<Boolean> = _showAll
+//    val showAll: State<Boolean> = _showAll
 
     fun setShowAll(value: Boolean) {
         _showAll.value = value

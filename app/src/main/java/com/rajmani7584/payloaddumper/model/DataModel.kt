@@ -3,7 +3,6 @@ package com.rajmani7584.payloaddumper.model
 import android.app.Activity
 import android.app.Application
 import android.os.Environment
-import android.util.Log
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
@@ -11,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.google.protobuf.ByteString
 import com.rajmani7584.payloaddumper.MainActivity
 import com.rajmani7584.payloaddumper.engine.part_manifest.PartManifestOuterClass
+import com.rajmani7584.payloaddumper.engine.part_manifest.newPartitionInfoOrNull
 import com.rajmani7584.payloaddumper.nativeHelper.PayloadDumper
 import com.rajmani7584.payloaddumper.ui.screens.LogManager
 import kotlinx.coroutines.Dispatchers
@@ -18,29 +18,19 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class DataModel(application: Application): AndroidViewModel(application) {
-
-    private val settingsDataStore = SettingsData(application)
     val externalStorage: String = Environment.getExternalStorageDirectory().absolutePath
-
-
-    val isDarkTheme =
-        settingsDataStore.darkTheme.stateIn(viewModelScope, SharingStarted.Eagerly, false)
-    val isDynamicColor =
-        settingsDataStore.dynamicColor.stateIn(viewModelScope, SharingStarted.Eagerly, false)
-    val concurrency =
-        settingsDataStore.concurrency.stateIn(viewModelScope, SharingStarted.Eagerly, 4)
-    val autoDelete =
-        settingsDataStore.autoDelete.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private val _hasPermission = mutableStateOf<Boolean?>(null)
     val hasPermission: State<Boolean?> = _hasPermission
@@ -53,46 +43,23 @@ class DataModel(application: Application): AndroidViewModel(application) {
         _url.value = value
     }
 
-    fun setDarkTheme(value: Boolean) {
-        viewModelScope.launch {
-            settingsDataStore.saveDarkTheme(value)
-        }
-    }
-
-    fun setDynamicColor(value: Boolean) {
-        viewModelScope.launch {
-            settingsDataStore.saveDynamicColor(value)
-        }
-    }
-
-    fun setConcurrency(value: Int) {
-        viewModelScope.launch {
-            settingsDataStore.saveConcurrency(value)
-        }
-    }
-
-    fun setAutoDelete(value: Boolean) {
-        viewModelScope.launch {
-            settingsDataStore.setAutoDelete(value)
-        }
-    }
-
     fun setPermission(activity: MainActivity) {
         _hasPermission.value = Utils.hasPermission(activity)
     }
 
-    fun requestPermission(activity: Activity?) {
-        if (activity == null) return
+    fun requestPermission(activity: Activity) {
         Utils.requestPermission(activity)
         _hasPermission.value = Utils.hasPermission(activity)
     }
 
-    private val _lastDirectory = mutableStateOf(externalStorage)
-    val lastDirectory: State<String> = _lastDirectory
+    private val _lastDirectory = MutableStateFlow(externalStorage)
+    val lastDirectory: StateFlow<String> = _lastDirectory
 
 
-    private val _outputDirectory = mutableStateOf("$externalStorage/PayloadDumper")
-    val outputDirectory: State<String> = _outputDirectory
+    private val _baseOutputDirectory = "$externalStorage/PayloadDumper"
+
+    private val _outputDirectory = MutableStateFlow(_baseOutputDirectory)
+    val outputDirectory: StateFlow<String> = _outputDirectory
 
     fun setLastDirectory(path: String) {
         _lastDirectory.value = path
@@ -107,55 +74,85 @@ class DataModel(application: Application): AndroidViewModel(application) {
 
     var pollingJob: Job? = null
 
+    private var settingParam = SettingParam()
+
+    fun setSettingParam(param: SettingParam) {
+        settingParam = param
+    }
+
     fun startPolling() {
         if (pollingJob?.isActive == true) return
         pollingJob = viewModelScope.launch(Dispatchers.Default) {
             while (true) {
-                delay(16)
+                delay(100)
                 val state = _payload.value as? PayloadState.Ready ?: break
                 val updated = state.partitions.map { p ->
                     val base = p.id * StructLayout.STRIDE
                     val status = state.buffer.get(base + StructLayout.OFF_STAT).toInt() and 0xFF
                     val progress = state.buffer.get(base + StructLayout.OFF_PROG).toInt() and 0xFF
+                    val pState = PartStatus.fromCode(status)
+
+                    val alreadyFinalized = p.status == pState && pState.isFinal()
+
+                    val error = if (!alreadyFinalized && (pState == PartStatus.FAILED || pState == PartStatus.VERIFICATION_FAILED)) p.error
+                        ?: onFailure(p, PayloadDumper.getDumpError(p.id).getOrElse { "Unknown error" }) else p.error
+
+                    if (!alreadyFinalized && pState == PartStatus.COMPLETED) LogManager.success("Dumped ${p.name}.img to ${p.output}")
+
                     p.copy(
-                        status = PartStatus.fromCode(status),
-                        progress = progress / 100f
+                        status = pState,
+                        progress = progress / 100f,
+                        error = error
                     )
                 }
-                val newErrors = updated.filter { it.status == PartStatus.FAILED }.associate { it.id to PayloadDumper.getDumpError(it.id).getOrElse { "Unknown error" } }
-                _payload.value = state.copy(partitions = updated, errors = state.errors + newErrors)
-                if (updated.none { it.status == PartStatus.RUNNING || it.status == PartStatus.PENDING }) {
+                _payload.value = state.copy(partitions = updated)
+                if (updated.all { it.status.isFinal() }) {
                     break
                 }
             }
         }
     }
-
+    fun onFailure(partition: PartitionState, message: String): String {
+        LogManager.error("${partition.name}.img: $message")
+        if (settingParam.autoDelete && partition.output != null) {
+            try {
+                if(File(partition.output).delete()) LogManager.log("Auto deleted: ${partition.output}")
+            } catch (e: Exception) {
+                LogManager.error(e.message ?: "Error auto deleting ${partition.output}")
+            }
+        }
+        return message
+    }
     private val _navEvent = Channel<Unit>(Channel.BUFFERED)
     val navEvent = _navEvent.receiveAsFlow()
 
-    suspend fun initPayload(
-        payloadType: PayloadType
-    ) {
+    suspend fun initPayload(payloadType: PayloadType) {
+        LogManager.log("Opening payload: ${payloadType.getPathString()}")
         withContext(Dispatchers.IO) {
             _payload.value = PayloadState.Loading
             PayloadDumper.init().getOrElse {
                 _payload.value = PayloadState.Error(it.message ?: "Engine initialisation error")
                 return@withContext
             }
-            PayloadDumper.open(payloadType).getOrElse {
+            val manifest = PayloadDumper.open(payloadType, settingParam.concurrency, settingParam.bufSize).getOrElse {
                 _payload.value =
                     PayloadState.Error(it.message ?: "Error occurred while opening the payload")
-                Log.d("ERROR", it.message ?: "Unknown")
-                return@withContext
-            }
-            val manifest = PayloadDumper.getManifest().getOrElse {
-                _payload.value =
-                    PayloadState.Error(it.message ?: "Error occurred while fetching manifest")
+                LogManager.error(it.message ?: "Error occurred while opening the payload")
                 return@withContext
             }
 
-            val partitions = manifest.partitionsList.mapIndexed { index, p -> PartitionState(p?.partitionName ?: "error!", p?.newPartitionInfo?.size ?: 0L, p.incremental, p?.newPartitionInfo?.hash, index) }
+            val partitions = manifest.partitionsList.mapIndexed { index, p ->
+                PartitionState(
+                    name = if (p.hasPartitionName()) p.partitionName else "N/A",
+                    size = p.newPartitionInfoOrNull?.size ?: 0L,
+                    incremental = p.incremental,
+                    hash = p.newPartitionInfoOrNull?.hash,
+                    downloadSize = if (p.hasDownloadSize()) p.downloadSize else null,
+                    output = null,
+                    error = null,
+                    id = index
+                )
+            }
             val buffer = ByteBuffer.allocateDirect(partitions.size * StructLayout.STRIDE)
                 .apply { order(ByteOrder.nativeOrder()) }
             PayloadDumper.setupBuffer(partitions.size, buffer).getOrElse {
@@ -171,7 +168,12 @@ class DataModel(application: Application): AndroidViewModel(application) {
                 manifest,
                 buffer
             )
+            val timestamp = SimpleDateFormat("yyyyMMDD-hhmmss", Locale.getDefault()).format(Date())
+            _outputDirectory.value =
+                "$_baseOutputDirectory/$timestamp-${name.substring(0, minOf(12, name.length))}"
             _navEvent.send(Unit)
+
+            LogManager.success("Paylaod info fetched successfully")
         }
     }
 
@@ -207,21 +209,30 @@ class DataModel(application: Application): AndroidViewModel(application) {
         )
     }
 
-    private fun addError(index: Int, message: String) {
-        val state = _payload.value as? PayloadState.Ready ?: return
-        _payload.value = state.copy(errors = state.errors + (index to message))
-    }
+//    private fun addError(index: Int, message: String) {
+//        val state = _payload.value as? PayloadState.Ready ?: return
+//        _payload.value = state.copy(errors = state.errors + (index to message))
+//        LogManager.error(message)
+//    }
 
     suspend fun dump(partition: PartitionState) {
         withContext(Dispatchers.IO) {
-            updatePartition(partition.id) { it.copy(status = PartStatus.PENDING) }
-            val out = Utils.setupPartitionName(outputDirectory.value, partition.name, 0)
-            PayloadDumper.dumpPart(partition.id, out)
+            if (_payload.value !is PayloadState.Ready) return@withContext
+            if (partition.status == PartStatus.PENDING || partition.status == PartStatus.RUNNING) return@withContext
+            val out = Utils.setupPartitionName(outputDirectory.value, partition.name, settingParam.overwrite)
+            LogManager.log("Dumping ${partition.name}.img to $out")
+            updatePartition(partition.id) { it.copy(status = PartStatus.PENDING, output = out, error = null) }
+            PayloadDumper.dumpPart(partition.id, out, settingParam.verifyHash)
                 .onFailure { e ->
                     updatePartition(partition.id) { it.copy(status = PartStatus.FAILED) }
-                    addError(partition.id, e.message ?: "Unknown error")
                     LogManager.error(e.message ?: "Unknown")
-                    return@withContext
+                    if (settingParam.autoDelete) {
+                        try {
+                            if(File(out).delete()) LogManager.log("Auto deleted: $out")
+                        } catch (e: Exception) {
+                            LogManager.error(e.message ?: "Error auto deleting $out")
+                        }
+                    }
                 }
             startPolling()
         }
@@ -231,7 +242,18 @@ class DataModel(application: Application): AndroidViewModel(application) {
         withContext(Dispatchers.IO) {
             val state = _payload.value as? PayloadState.Ready ?: return@withContext
             state.partitions.forEach {
+                if (it.status == PartStatus.PENDING || it.status == PartStatus.RUNNING) return@withContext
                 dump(it)
+            }
+        }
+    }
+
+    suspend fun cancelAll() {
+        withContext(Dispatchers.IO) {
+            val state = _payload.value as? PayloadState.Ready ?: return@withContext
+            state.partitions.forEach {
+                if (it.status == PartStatus.PENDING || it.status == PartStatus.RUNNING)
+                    cancel(it)
             }
         }
     }
@@ -239,9 +261,10 @@ class DataModel(application: Application): AndroidViewModel(application) {
     suspend fun cancel(partition: PartitionState) {
         withContext(Dispatchers.IO) {
             val state = _payload.value as? PayloadState.Ready ?: return@withContext
+            LogManager.error("Cancelling ${partition.name} dumping...")
             state.buffer.put(partition.id * StructLayout.STRIDE + StructLayout.OFF_ABT, 1)
-            updatePartition(partition.id) { it.copy(status = PartStatus.FAILED) }
-            PayloadDumper.cancelPart(partition.id)
+//            updatePartition(partition.id) { it.copy(status = PartStatus.FAILED) }
+//            PayloadDumper.cancelPart(partition.id)
         }
     }
 
@@ -262,25 +285,32 @@ class DataModel(application: Application): AndroidViewModel(application) {
 }
 
 sealed class PayloadState {
-    object Idle: PayloadState()
-    object Loading: PayloadState()
-    data class Error(val message: String): PayloadState()
+    object Idle : PayloadState()
+    object Loading : PayloadState()
+    data class Error(val message: String) : PayloadState()
     data class Ready(
         val name: String,
         val payloadType: PayloadType,
         val partitions: List<PartitionState>,
         val manifest: PartManifestOuterClass.PartManifest,
-        val buffer: ByteBuffer,
-        val errors: Map<Int, String> = emptyMap()
-    ): PayloadState()
+        val buffer: ByteBuffer
+    ) : PayloadState()
 }
-data class PartitionState(val name: String, val size: Long, val incremental: Boolean, val hash: ByteString?, val id: Int, val status: PartStatus = PartStatus.IDLE, val progress: Float = 0f)
-
+data class PartitionState(val name: String, val size: Long, val incremental: Boolean, val hash: ByteString?, val downloadSize: Long?, val output: String?, val error: String?, val id: Int, val status: PartStatus = PartStatus.IDLE, val progress: Float = 0f)
 enum class PartStatus(val code: Int) {
-    IDLE(0), PENDING(1), RUNNING(2), COMPLETED(3), FAILED(4);
+    IDLE(0), PENDING(1), RUNNING(2), COMPLETED(3), FAILED(4), VERIFYING(5), VERIFICATION_FAILED(6);
 
     companion object {
         fun fromCode(value: Int) = PartStatus.entries.find { it.code == value } ?: IDLE
+    }
+
+    fun isFinal() = when (this) {
+        IDLE,
+        COMPLETED,
+        FAILED,
+        VERIFICATION_FAILED -> true
+
+        else -> false
     }
 }
 object StructLayout {

@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rajmani7584.payloaddumper.MainActivity
 import com.rajmani7584.payloaddumper.model.DataModel
-import com.rajmani7584.payloaddumper.ui.components.AppTheme
 import com.rajmani7584.payloaddumper.ui.components.components.Scaffold
 import com.rajmani7584.payloaddumper.ui.customviews.ScreenTopBar
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -47,19 +46,24 @@ import java.util.Locale
 fun LogScreen() {
     val dataModel: DataModel = viewModel(LocalActivity.current as MainActivity)
     val scrollState = rememberLazyListState()
-    val isDarkTheme by dataModel.isDarkTheme.collectAsState()
+//    val isDarkTheme by dataModel.isDarkTheme.collectAsState()
     val logs by LogManager.logs.collectAsState()
     Scaffold(topBar = { ScreenTopBar(title = "Logs") }) { innerPadding ->
-        Column(Modifier.fillMaxSize().padding(innerPadding)) {
+        Column(Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())) {
             SelectContainer {
                 LazyColumn(
                     state = scrollState,
-                    modifier = Modifier.fillMaxSize().padding(12.dp)
-                        .background(AppTheme.colors.onBackground, RoundedCornerShape(4.dp)),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp)
+                        .background(Color.Black, RoundedCornerShape(4.dp)),
                     contentPadding = PaddingValues(10.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     items(logs) { entry ->
+                        val color = when (entry.log) {
+                            is LogType.Success -> Color.Green.copy(red = .5f, blue = .8f)
+                            is LogType.Failure -> Color.Red.copy(green = .4f)
+                            is LogType.Log -> Color(0xFFC9C9FA)
+                        }
                         Row(
                             Modifier.fillMaxWidth()
                         ) {
@@ -68,11 +72,7 @@ fun LogScreen() {
                                 fontFamily = FontFamily.Monospace,
                                 fontStyle = FontStyle.Italic,
                                 fontSize = 12.sp,
-                                color = when (entry.log) {
-                                    is LogType.Success -> Color.Green.copy(red = .75f, blue = .75f)
-                                    is LogType.Failure -> Color.Red
-                                    is LogType.Log -> Color(0xffaaaaff)
-                                }
+                                color = color
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
@@ -80,15 +80,7 @@ fun LogScreen() {
                                 fontFamily = FontFamily.Monospace,
                                 fontStyle = FontStyle.Italic,
                                 fontSize = 12.sp,
-                                color = when (entry.log) {
-                                    is LogType.Success -> Color.Green
-                                    is LogType.Failure -> Color.Red
-                                    is LogType.Log -> Color.Blue.copy(
-                                        blue = 1f,
-                                        red = .2f,
-                                        green = if (isDarkTheme) .6f else .2f
-                                    )
-                                }
+                                color = color
                             )
                         }
                     }

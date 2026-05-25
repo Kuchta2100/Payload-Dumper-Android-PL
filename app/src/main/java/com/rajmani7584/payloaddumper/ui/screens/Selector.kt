@@ -23,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FilePresent
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,7 +55,9 @@ import com.rajmani7584.payloaddumper.model.DataModel
 import com.rajmani7584.payloaddumper.model.ExplorerModel
 import com.rajmani7584.payloaddumper.model.FileData
 import com.rajmani7584.payloaddumper.model.PayloadType
-import com.rajmani7584.payloaddumper.ui.components.components.Button
+import com.rajmani7584.payloaddumper.ui.components.LocalColors
+import com.rajmani7584.payloaddumper.ui.components.LocalContentColor
+import com.rajmani7584.payloaddumper.ui.components.components.IconButton
 import com.rajmani7584.payloaddumper.ui.components.components.Scaffold
 import com.rajmani7584.payloaddumper.ui.customviews.ScreenTopBar
 import java.io.File
@@ -66,6 +69,7 @@ fun Selector(appNavController: NavHostController) {
     val dataModel: ExplorerModel = viewModel()
     val currentPath by dataModel.lastDirectory
     val externalStoragePath = mainModel.externalStorage
+//    val settings by LocalSettings.current.settings.collectAsState()
 
     val isDir =
         appNavController.currentBackStackEntry?.arguments?.getBoolean("directory") == true
@@ -90,22 +94,21 @@ fun Selector(appNavController: NavHostController) {
                 ),
                 nav = true,
                 onNavClick = {
-                    appNavController.popBackStack()
-                },
-                actions = {
-                    if (!isDir && canWrite) {
-                        Button(
-                            onClick = {
-                                mainModel.setOutputDirectory(currentPath)
-                                appNavController.popBackStack()
-                            },
-                            text = "Select"
-                        )
-                    }
-                }
-            )
+                    appNavController.popBackStack(Screens.App.route, false)
+                })
         },
-        containerColor = Color.Transparent
+        floatingActionButton = {
+            if (isDir && canWrite) {
+                IconButton(
+                    onClick = {
+                        mainModel.setOutputDirectory(currentPath)
+                        appNavController.popBackStack()
+                    }
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null, tint = LocalColors.current.surface)
+                }
+            }
+        }
     ) { innerPadding ->
         val fileModifier = Modifier
             .fillMaxWidth()
@@ -255,7 +258,8 @@ fun FileButton(
                 is FileData.Folder -> Icons.Default.Folder
             },
             contentDescription = null,
-            modifier = Modifier.padding(horizontal = 4.dp)
+            modifier = Modifier.padding(horizontal = 4.dp),
+            tint = LocalContentColor.current
         )
         Spacer(Modifier.width(5.dp))
         Text(

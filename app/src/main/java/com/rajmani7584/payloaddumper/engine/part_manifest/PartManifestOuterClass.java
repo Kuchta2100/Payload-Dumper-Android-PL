@@ -545,12 +545,23 @@ public final class PartManifestOuterClass {
     int getOperationsCount();
 
     /**
-     * <code>required bool incremental = 4;</code>
+     * <code>optional uint64 download_size = 4;</code>
+     * @return Whether the downloadSize field is set.
+     */
+    boolean hasDownloadSize();
+    /**
+     * <code>optional uint64 download_size = 4;</code>
+     * @return The downloadSize.
+     */
+    long getDownloadSize();
+
+    /**
+     * <code>required bool incremental = 5;</code>
      * @return Whether the incremental field is set.
      */
     boolean hasIncremental();
     /**
-     * <code>required bool incremental = 4;</code>
+     * <code>required bool incremental = 5;</code>
      * @return The incremental.
      */
     boolean getIncremental();
@@ -768,18 +779,52 @@ public final class PartManifestOuterClass {
       operations_.remove(index);
     }
 
-    public static final int INCREMENTAL_FIELD_NUMBER = 4;
+    public static final int DOWNLOAD_SIZE_FIELD_NUMBER = 4;
+    private long downloadSize_;
+    /**
+     * <code>optional uint64 download_size = 4;</code>
+     * @return Whether the downloadSize field is set.
+     */
+    @java.lang.Override
+    public boolean hasDownloadSize() {
+      return ((bitField0_ & 0x00000004) != 0);
+    }
+    /**
+     * <code>optional uint64 download_size = 4;</code>
+     * @return The downloadSize.
+     */
+    @java.lang.Override
+    public long getDownloadSize() {
+      return downloadSize_;
+    }
+    /**
+     * <code>optional uint64 download_size = 4;</code>
+     * @param value The downloadSize to set.
+     */
+    private void setDownloadSize(long value) {
+      bitField0_ |= 0x00000004;
+      downloadSize_ = value;
+    }
+    /**
+     * <code>optional uint64 download_size = 4;</code>
+     */
+    private void clearDownloadSize() {
+      bitField0_ = (bitField0_ & ~0x00000004);
+      downloadSize_ = 0L;
+    }
+
+    public static final int INCREMENTAL_FIELD_NUMBER = 5;
     private boolean incremental_;
     /**
-     * <code>required bool incremental = 4;</code>
+     * <code>required bool incremental = 5;</code>
      * @return Whether the incremental field is set.
      */
     @java.lang.Override
     public boolean hasIncremental() {
-      return ((bitField0_ & 0x00000004) != 0);
+      return ((bitField0_ & 0x00000008) != 0);
     }
     /**
-     * <code>required bool incremental = 4;</code>
+     * <code>required bool incremental = 5;</code>
      * @return The incremental.
      */
     @java.lang.Override
@@ -787,18 +832,18 @@ public final class PartManifestOuterClass {
       return incremental_;
     }
     /**
-     * <code>required bool incremental = 4;</code>
+     * <code>required bool incremental = 5;</code>
      * @param value The incremental to set.
      */
     private void setIncremental(boolean value) {
-      bitField0_ |= 0x00000004;
+      bitField0_ |= 0x00000008;
       incremental_ = value;
     }
     /**
-     * <code>required bool incremental = 4;</code>
+     * <code>required bool incremental = 5;</code>
      */
     private void clearIncremental() {
-      bitField0_ = (bitField0_ & ~0x00000004);
+      bitField0_ = (bitField0_ & ~0x00000008);
       incremental_ = false;
     }
 
@@ -1106,7 +1151,43 @@ public final class PartManifestOuterClass {
       }
 
       /**
-       * <code>required bool incremental = 4;</code>
+       * <code>optional uint64 download_size = 4;</code>
+       * @return Whether the downloadSize field is set.
+       */
+      @java.lang.Override
+      public boolean hasDownloadSize() {
+        return instance.hasDownloadSize();
+      }
+      /**
+       * <code>optional uint64 download_size = 4;</code>
+       * @return The downloadSize.
+       */
+      @java.lang.Override
+      public long getDownloadSize() {
+        return instance.getDownloadSize();
+      }
+      /**
+       * <code>optional uint64 download_size = 4;</code>
+       * @param value The downloadSize to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDownloadSize(long value) {
+        copyOnWrite();
+        instance.setDownloadSize(value);
+        return this;
+      }
+      /**
+       * <code>optional uint64 download_size = 4;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDownloadSize() {
+        copyOnWrite();
+        instance.clearDownloadSize();
+        return this;
+      }
+
+      /**
+       * <code>required bool incremental = 5;</code>
        * @return Whether the incremental field is set.
        */
       @java.lang.Override
@@ -1114,7 +1195,7 @@ public final class PartManifestOuterClass {
         return instance.hasIncremental();
       }
       /**
-       * <code>required bool incremental = 4;</code>
+       * <code>required bool incremental = 5;</code>
        * @return The incremental.
        */
       @java.lang.Override
@@ -1122,7 +1203,7 @@ public final class PartManifestOuterClass {
         return instance.getIncremental();
       }
       /**
-       * <code>required bool incremental = 4;</code>
+       * <code>required bool incremental = 5;</code>
        * @param value The incremental to set.
        * @return This builder for chaining.
        */
@@ -1132,7 +1213,7 @@ public final class PartManifestOuterClass {
         return this;
       }
       /**
-       * <code>required bool incremental = 4;</code>
+       * <code>required bool incremental = 5;</code>
        * @return This builder for chaining.
        */
       public Builder clearIncremental() {
@@ -1163,11 +1244,12 @@ public final class PartManifestOuterClass {
               "newPartitionInfo_",
               "operations_",
               com.rajmani7584.payloaddumper.engine.part_manifest.PartManifestOuterClass.Operation.class,
+              "downloadSize_",
               "incremental_",
             };
             java.lang.String info =
-                "\u0001\u0004\u0000\u0001\u0001\u0004\u0004\u0000\u0001\u0003\u0001\u1508\u0000\u0002" +
-                "\u1009\u0001\u0003\u041b\u0004\u1507\u0002";
+                "\u0001\u0005\u0000\u0001\u0001\u0005\u0005\u0000\u0001\u0003\u0001\u1508\u0000\u0002" +
+                "\u1009\u0001\u0003\u041b\u0004\u1003\u0002\u0005\u1507\u0003";
             return newMessageInfo(DEFAULT_INSTANCE, info, objects);
         }
         case GET_DEFAULT_INSTANCE: {
