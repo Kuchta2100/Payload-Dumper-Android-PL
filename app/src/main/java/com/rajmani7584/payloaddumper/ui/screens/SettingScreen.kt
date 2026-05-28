@@ -4,9 +4,7 @@ import android.content.Intent
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,7 +41,6 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -55,14 +52,12 @@ import com.rajmani7584.payloaddumper.model.ColorTheme
 import com.rajmani7584.payloaddumper.model.DarkMode
 import com.rajmani7584.payloaddumper.model.Utils
 import com.rajmani7584.payloaddumper.ui.components.AppTheme
-import com.rajmani7584.payloaddumper.ui.components.Colors
 import com.rajmani7584.payloaddumper.ui.components.LocalColors
 import com.rajmani7584.payloaddumper.ui.components.LocalContentColor
 import com.rajmani7584.payloaddumper.ui.components.components.Scaffold
 import com.rajmani7584.payloaddumper.ui.components.components.Slider
 import com.rajmani7584.payloaddumper.ui.components.components.Switch
 import com.rajmani7584.payloaddumper.ui.components.components.card.OutlinedCard
-import com.rajmani7584.payloaddumper.ui.components.contentColorFor
 import com.rajmani7584.payloaddumper.ui.customviews.ScreenTopBar
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -81,7 +76,7 @@ fun SettingScreen() {
     val contentPad = 16.dp
     val shape = RoundedCornerShape(8.dp)
 
-    Scaffold(topBar = { ScreenTopBar(title = "Settings") }) { innerPadding ->
+    Scaffold(topBar = { ScreenTopBar(title = stringResource(R.string.nav_bar_settings)) }) { innerPadding ->
         LazyColumn(
             Modifier
                 .padding(top = innerPadding.calculateTopPadding())
@@ -100,7 +95,7 @@ fun SettingScreen() {
                             style = AppTheme.typography.h4
                         )
                         Spacer(Modifier.height(6.dp))
-                        Text("Effective from next session", style = AppTheme.typography.body3)
+                        Text(stringResource(R.string.settings_concurrency_hint), style = AppTheme.typography.body3)
                         Spacer(Modifier.height(12.dp))
                         Slider(
                             concurrency.toFloat(),
@@ -124,10 +119,10 @@ fun SettingScreen() {
                             .padding(contentPad)
                             .fillMaxWidth()
                     ) {
-                        Text("Buffer Size", style = AppTheme.typography.h4)
+                        Text(stringResource(R.string.settings_buffer_size), style = AppTheme.typography.h4)
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "for calculating sha checksum\nand also for downloading from remote",
+                            stringResource(R.string.settings_buffer_size_hint),
                             style = AppTheme.typography.body3
                         )
                         Spacer(Modifier.height(12.dp))
@@ -158,7 +153,7 @@ fun SettingScreen() {
                         ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                "Verify Hash",
+                                stringResource(R.string.settings_verify_hash),
                                 style = AppTheme.typography.h4
                             )
                             Spacer(Modifier.weight(1f))
@@ -169,7 +164,7 @@ fun SettingScreen() {
                         Spacer(Modifier.height(6.dp))
 
                         Text(
-                            "verify checksum of each extracted partition",
+                            stringResource(R.string.settings_verify_hash_hint),
                             style = AppTheme.typography.body3
                         )
                     }
@@ -216,7 +211,7 @@ fun SettingScreen() {
                         ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                "Overwrite Existing Partitions",
+                                stringResource(R.string.settings_overwrite_partitions),
                                 style = AppTheme.typography.h4
                             )
                             Spacer(Modifier.weight(1f))
@@ -226,7 +221,7 @@ fun SettingScreen() {
                         }
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "if disabled existing partitions will auto renamed to name(i++)",
+                            stringResource(R.string.settings_overwrite_partitions_hint),
                             style = AppTheme.typography.body3
                         )
                     }
@@ -244,15 +239,20 @@ fun SettingScreen() {
                             .padding(contentPad)
                             .fillMaxWidth()
                     ) {
-                        Text("Color Theme", style = AppTheme.typography.h4)
+                        Text(stringResource(R.string.settings_color_theme), style = AppTheme.typography.h4)
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            stringResource(R.string.settings_theme_style_info),
+                            stringResource(R.string.settings_color_theme_info),
                             style = AppTheme.typography.body3
                         )
                         Spacer(Modifier.height(12.dp))
                         val options =
-                            ColorTheme.entries.associate { it.code to it.name.toDisplayName() }
+                            ColorTheme.entries.associate {
+                                it.code to when (it) {
+                                    ColorTheme.APP -> stringResource(R.string.settings_color_theme_app)
+                                    ColorTheme.SYSTEM -> stringResource(R.string.settings_color_theme_system)
+                                }
+                            }
                         ChoiceSelect(
                             options = options,
                             selected = settings.colorTheme.code,
@@ -282,7 +282,13 @@ fun SettingScreen() {
                         )
                         Spacer(Modifier.height(12.dp))
                         val options =
-                            DarkMode.entries.associate { it.code to it.name.toDisplayName() }
+                            DarkMode.entries.associate {
+                                it.code to when (it) {
+                                    DarkMode.AUTO -> stringResource(R.string.settings_dark_theme_auto)
+                                    DarkMode.LIGHT -> stringResource(R.string.settings_dark_theme_light)
+                                    DarkMode.DARK -> stringResource(R.string.settings_dark_theme_dark)
+                                }
+                            }
                         ChoiceSelect(
                             options = options,
                             selected = settings.darkTheme.code,
@@ -337,10 +343,10 @@ fun SettingScreen() {
                     ctx.startActivity(intent)
                 }, shape = shape, modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(contentPad)) {
-                        Text("Author", style = AppTheme.typography.h4)
+                        Text(stringResource(R.string.settings_about_author), style = AppTheme.typography.h4)
                         Spacer(Modifier.height(4.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(stringResource(R.string.settings_about_github_username))
+                            Text(stringResource(R.string.settings_about_author_name))
                             Spacer(Modifier.weight(1f))
                             Icon(
                                 ImageVector.vectorResource(R.drawable.github_lockup_black),
@@ -366,7 +372,7 @@ fun SettingScreen() {
                         Modifier.padding(contentPad),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Source Code")
+                        Text(stringResource(R.string.settings_about_source_code))
                         Spacer(Modifier.weight(1f))
                         Icon(
                             ImageVector.vectorResource(R.drawable.github_lockup_black),
@@ -508,4 +514,4 @@ fun ChoiceSelect(
         }
     }
 }
-fun String.toDisplayName(): String = split("_", "-", " ").joinToString(" ") { it.lowercase().replaceFirstChar { c -> c.uppercase() } }
+//fun String.toDisplayName(): String = split("_", "-", " ").joinToString(" ") { it.lowercase().replaceFirstChar { c -> c.uppercase() } }

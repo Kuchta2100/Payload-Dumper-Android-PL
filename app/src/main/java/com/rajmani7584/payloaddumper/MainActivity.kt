@@ -19,6 +19,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -110,7 +111,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(requestCounter) {
                 delay(40)
                 dataModel.setPermissions(this@MainActivity)
-                if (dataModel.hasPermission.value != true) LogManager.error("File Permission Denied")
+                if (dataModel.hasPermission.value != true) LogManager.error(getString(R.string.file_permission_denied))
             }
         }
     }

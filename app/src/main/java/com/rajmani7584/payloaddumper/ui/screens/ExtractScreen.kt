@@ -134,7 +134,7 @@ fun ExtractScreen(payloadState: PayloadState, appNavController: NavHostControlle
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (payloadState !is PayloadState.Ready) {
-                Text("Payload not initialized yet!")
+                Text(stringResource(R.string.extract_payload_not_init))
                 return@Column
             }
             LazyColumn(
@@ -155,7 +155,7 @@ fun ExtractScreen(payloadState: PayloadState, appNavController: NavHostControlle
                                 .padding(horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Save To: ", style = AppTheme.typography.label1)
+                            Text(stringResource(R.string.extract_save_to), style = AppTheme.typography.label1)
                             Chip(
                                 Modifier
                                     .weight(1f)
@@ -167,7 +167,7 @@ fun ExtractScreen(payloadState: PayloadState, appNavController: NavHostControlle
                                     )
                                     .padding(horizontal = 2.dp)
                             ) {
-                                outputDirectory.replace(externalStorage, "Internal Storage")
+                                outputDirectory.replace(externalStorage, stringResource(R.string.txt_internal_storage))
                                     .split("/")
                                     .forEachIndexed { index, p ->
                                         if (index != 0)
@@ -202,7 +202,7 @@ fun ExtractScreen(payloadState: PayloadState, appNavController: NavHostControlle
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Partition Available (${payloadState.partitions.size})",
+                            stringResource(R.string.extract_parts_avail, payloadState.partitions.size),
                             style = AppTheme.typography.h4
                         )
                         Spacer(Modifier.weight(1f))
@@ -219,7 +219,7 @@ fun ExtractScreen(payloadState: PayloadState, appNavController: NavHostControlle
                                 if (payloadState.partitions.any { it.status == PartStatus.PENDING || it.status == PartStatus.RUNNING }) {
                                     Button(
                                         variant = ButtonVariant.PrimaryOutlined,
-                                        text = "Cancel All",
+                                        text = stringResource(R.string.extract_ops_cancel_all),
                                         onClick = {
                                             cs.launch {
                                                 dataViewModel.cancelAll()
@@ -228,7 +228,7 @@ fun ExtractScreen(payloadState: PayloadState, appNavController: NavHostControlle
                                 } else {
                                     Button(
                                         enabled = canExtract,
-                                        text = "Save All",
+                                        text = stringResource(R.string.extract_ops_save_all),
                                         onClick = {
                                             cs.launch {
                                                 dataViewModel.dumpAll()
@@ -319,11 +319,11 @@ fun ListItem(enabled: Boolean = true, partition: PartitionState, onDump: () -> U
                     style = AppTheme.typography.label2
                 )
                 val txtColor = when (partition.status) {
-                    PartStatus.RUNNING -> "progress ${(partition.progress * 100).toInt()}%" to LocalColors.current.primary
-                    PartStatus.PENDING -> "pending..." to LocalColors.current.primary
-                    PartStatus.VERIFYING -> "verifying..." to LocalColors.current.primary
-                    PartStatus.COMPLETED -> "done" to LocalColors.current.primary
-                    PartStatus.FAILED -> "failed" to LocalColors.current.error
+                    PartStatus.RUNNING -> stringResource(R.string.partition_status_progress, (partition.progress * 100).toInt()) to LocalColors.current.primary
+                    PartStatus.PENDING -> stringResource(R.string.partition_status_pending) to LocalColors.current.primary
+                    PartStatus.VERIFYING -> stringResource(R.string.partition_status_verifying) to LocalColors.current.primary
+                    PartStatus.COMPLETED -> stringResource(R.string.partition_status_done) to LocalColors.current.primary
+                    PartStatus.FAILED -> stringResource(R.string.partition_status_failed) to LocalColors.current.error
                     else -> "" to Color.White
                 }
                 if (partition.status != PartStatus.IDLE) {
@@ -393,7 +393,7 @@ fun ListItem(enabled: Boolean = true, partition: PartitionState, onDump: () -> U
                     variant = ButtonVariant.PrimaryOutlined,
                     onClick = onDump
                 ) {
-                    Text("Save", style = AppTheme.typography.button)
+                    Text(stringResource(R.string.extract_ops_save), style = AppTheme.typography.button)
                 }
             }
         }
@@ -411,13 +411,14 @@ fun ListItem(enabled: Boolean = true, partition: PartitionState, onDump: () -> U
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            Text("Partition Details:\n\nName: ${partition.name}", style = AppTheme.typography.h1)
+            Text(stringResource(R.string.partition_details_header), style = AppTheme.typography.h1)
+            Text(stringResource(R.string.partition_details_name, partition.name))
             Spacer(Modifier.height(24.dp))
             partition.downloadSize?.let {
-                Text("Download Size: ${Utils.parseSize(it)}")
+                Text(stringResource(R.string.partition_details_download_size, Utils.parseSize(it)))
                 Spacer(Modifier.height(12.dp))
             }
-            Text("Partition size: ${Utils.parseSize(partition.size)}")
+            Text(stringResource(R.string.partition_details_size, Utils.parseSize(partition.size)))
             Spacer(Modifier.height(12.dp))
 
             val hash = partition.hash?.decodeToString() ?: "Couldn't get hash"
@@ -425,7 +426,7 @@ fun ListItem(enabled: Boolean = true, partition: PartitionState, onDump: () -> U
                 Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Hash: ")
+                Text(stringResource(R.string.partition_details_hash))
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -478,7 +479,7 @@ fun ListItem(enabled: Boolean = true, partition: PartitionState, onDump: () -> U
             }
             partition.error?.let {
                 Spacer(Modifier.height(24.dp))
-                Text("Error occurred:")
+                Text(stringResource(R.string.partition_details_error))
                 Box(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
                         .background(Color.Black).padding(12.dp)

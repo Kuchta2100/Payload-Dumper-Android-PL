@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.Settings
-import androidx.annotation.RequiresApi
 import androidx.core.net.toUri
 import com.rajmani7584.payloaddumper.ui.screens.LogManager
 import java.io.File

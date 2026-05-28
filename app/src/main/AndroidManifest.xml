@@ -20,7 +20,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:enableOnBackInvokedCallback="true"
-        android:theme="@style/Theme.PayloadDumper">
+        android:localeConfig="@xml/locale_config"
+        android:theme="@style/Theme.PayloadDumper"
+        tools:targetApi="37">
         <activity
             android:name=".MainActivity"
             android:exported="true"

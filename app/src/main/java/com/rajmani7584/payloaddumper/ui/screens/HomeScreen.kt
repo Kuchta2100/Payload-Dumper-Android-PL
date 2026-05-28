@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -110,7 +109,7 @@ fun HomeScreenUI(
     }
 
     Scaffold(
-        topBar = { ScreenTopBar(title = "Payload Dumper") }) { innerPadding ->
+        topBar = { ScreenTopBar(title = stringResource(R.string.app_name)) }) { innerPadding ->
         Column(
             Modifier.padding(top = innerPadding.calculateTopPadding()).fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -132,9 +131,9 @@ fun HomeScreenUI(
                                 ) {
                                     val activity = LocalActivity.current
                                     Spacer(Modifier.height(4.dp))
-                                    Text("Enable notification permission to process payload in background")
+                                    Text(stringResource(R.string.notification_perm_hint))
                                     Spacer(Modifier.height(6.dp))
-                                    Button(text = "Allow notifications", onClick = {
+                                    Button(text = stringResource(R.string.allow_notifications), onClick = {
                                         if (activity == null) return@Button
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                             dataModel.requestNotifyPermission(activity)
@@ -171,7 +170,7 @@ fun HomeScreenUI(
                                                 dataModel.requestPermission(activity)
                                             })
                                     } else
-                                        Button(text = "Select a file", onClick = {
+                                        Button(text = stringResource(R.string.home_select_file), onClick = {
                                             appNavController.navigate(
                                                 Screens.Selector.createRoute(
                                                     false
@@ -187,7 +186,7 @@ fun HomeScreenUI(
                             }
                             Spacer(Modifier.height(24.dp))
 
-                            Text("OR", color = AppTheme.colors.text.copy(alpha = .4f))
+                            Text(stringResource(R.string.home_select_or), color = AppTheme.colors.text.copy(alpha = .4f))
                             Spacer(Modifier.height(24.dp))
                             Column {
                                 val url by dataModel.remoteUrl
@@ -211,7 +210,7 @@ fun HomeScreenUI(
                                     },
                                     modifier = Modifier.align(Alignment.CenterHorizontally)
                                         .padding(vertical = 12.dp),
-                                    text = "Fetch"
+                                    text = stringResource(R.string.home_fetch_remote)
                                 )
                             }
                             Spacer(Modifier.height(24.dp))

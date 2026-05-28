@@ -19,12 +19,14 @@ import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.rajmani7584.payloaddumper.R
 import com.rajmani7584.payloaddumper.ui.components.LocalColors
 import kotlinx.coroutines.launch
 
@@ -60,7 +62,7 @@ fun AppLayout(
     val coroutineScope = rememberCoroutineScope()
     val pagerState = rememberPagerState(0) { 4 }
 
-    val navItems = listOf("Home", "Logs", "Analyzer", "Settings")
+    val navItems = listOf(stringResource(R.string.nav_bar_home), stringResource(R.string.nav_bar_logs), stringResource(R.string.nav_bar_analyze), stringResource(R.string.nav_bar_settings))
 
     NavigationSuiteScaffold(
 //        navigationSuiteColors = NavigationSuiteDefaults.colors(navigationBarContainerColor = AppTheme.colors.surface),

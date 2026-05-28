@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# Payload-Dumper-Android
+# Payload Dumper
 <br/>
 
 ![Launcher icon](./app/src/main/ic_launcher-playstore.png)
@@ -25,12 +25,11 @@
 ## Screenshots
 
 <p align="center">
-  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_1.png" width="250px"/>
-  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_2.png" width="250px"/>
-  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_3.png" width="250px"/>
-  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_4.png" width="250px"/>
-  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_5.png" width="250px"/>
-  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_6.png" width="250px"/>
+  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_1.png" width="250px" alt="Screenshot 1"/>
+  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_2.png" width="250px" alt="Screenshot 2"/>
+  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_3.png" width="250px" alt="Screenshot 3"/>
+  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_4.png" width="250px" alt="Screenshot 4"/>
+  <img src="./fastlane/metadata/android/en-US/images/phoneScreenshots/screenshot_5.png" width="250px" alt="Screenshot 5"/>
 </p>
 
 ## Features

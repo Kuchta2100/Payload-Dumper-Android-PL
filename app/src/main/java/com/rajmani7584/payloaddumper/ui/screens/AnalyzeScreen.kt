@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.rajmani7584.payloaddumper.R
 import com.rajmani7584.payloaddumper.ui.components.components.Scaffold
 import com.rajmani7584.payloaddumper.ui.customviews.ScreenTopBar
 
@@ -13,7 +15,7 @@ import com.rajmani7584.payloaddumper.ui.customviews.ScreenTopBar
 @Composable
 fun AnalyzeScreen() {
 
-    Scaffold(topBar = { ScreenTopBar(title = "Analyzer") }) { innerPadding ->
+    Scaffold(topBar = { ScreenTopBar(title = stringResource(R.string.nav_bar_analyze)) }) { innerPadding ->
         Box(Modifier.padding(top = innerPadding.calculateTopPadding()).fillMaxSize()) {
             Text("Analyzer - coming soon...")
         }

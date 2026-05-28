@@ -4,7 +4,6 @@ import android.app.Activity
 import android.app.Application
 import android.os.Build
 import android.os.Environment
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
@@ -188,7 +187,7 @@ class DataModel(application: Application): AndroidViewModel(application) {
                 "$_baseOutputDirectory/$timestamp-${name.substring(0, minOf(12, name.length))}"
             _navEvent.send(Unit)
 
-            LogManager.success("Paylaod info fetched successfully")
+            LogManager.success("Payload info fetched successfully")
         }
     }
 

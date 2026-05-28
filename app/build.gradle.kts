@@ -13,7 +13,7 @@ android {
     defaultConfig {
         applicationId = "com.rajmani7584.payloaddumper"
         minSdk = 28
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 20260526
         versionName = "5.0"
 
@@ -67,7 +67,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
-//    implementation(libs.flatbuffers.java)
     implementation(libs.androidx.compose.material3.adaptive.navigation.suite)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)

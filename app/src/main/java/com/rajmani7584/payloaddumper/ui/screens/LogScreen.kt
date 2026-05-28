@@ -1,6 +1,5 @@
 package com.rajmani7584.payloaddumper.ui.screens
 
-import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,13 +25,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.rajmani7584.payloaddumper.MainActivity
-import com.rajmani7584.payloaddumper.model.DataModel
+import com.rajmani7584.payloaddumper.R
 import com.rajmani7584.payloaddumper.ui.components.components.Scaffold
 import com.rajmani7584.payloaddumper.ui.customviews.ScreenTopBar
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,11 +42,11 @@ import java.util.Locale
 
 @Composable
 fun LogScreen() {
-    val dataModel: DataModel = viewModel(LocalActivity.current as MainActivity)
+//    val dataModel: DataModel = viewModel(LocalActivity.current as MainActivity)
     val scrollState = rememberLazyListState()
 //    val isDarkTheme by dataModel.isDarkTheme.collectAsState()
     val logs by LogManager.logs.collectAsState()
-    Scaffold(topBar = { ScreenTopBar(title = "Logs") }) { innerPadding ->
+    Scaffold(topBar = { ScreenTopBar(title = stringResource(R.string.nav_bar_logs)) }) { innerPadding ->
         Column(Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())) {
             SelectContainer {
                 LazyColumn(
