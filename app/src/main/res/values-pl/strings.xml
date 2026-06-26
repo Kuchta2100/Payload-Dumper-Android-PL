@@ -20,7 +20,7 @@
   <string name="extract_ops_save_all">Zapisz wszystko</string>
   <string name="extract_ops_cancel_all">Anuluj wszystko</string>
   <string name="extract_ops_save">Zapisz</string>
-  <string name="partition_status_progress">postęp %d</string>
+  <string name="partition_status_progress">postęp %d%%</string>
   <string name="partition_status_pending">w toku</string>
   <string name="partition_status_verifying">weryfikowanie&#x2026;</string>
   <string name="partition_status_done">gotowe</string>

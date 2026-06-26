@@ -20,7 +20,7 @@
     <string name="extract_ops_save_all">Save All</string>
     <string name="extract_ops_cancel_all">Cancel All</string>
     <string name="extract_ops_save">Save</string>
-    <string name="partition_status_progress">progress %d</string>
+    <string name="partition_status_progress">progress %d%%</string>
     <string name="partition_status_pending">pending</string>
     <string name="partition_status_verifying">verifying…</string>
     <string name="partition_status_done">done</string>

@@ -103,7 +103,7 @@ class DataModel(application: Application): AndroidViewModel(application) {
                 val updated = state.partitions.map { p ->
                     val base = p.id * StructLayout.STRIDE
                     val status = state.buffer.get(base + StructLayout.OFF_STAT).toInt() and 0xFF
-                    val progress = state.buffer.get(base + StructLayout.OFF_PROG).toInt() and 0xFF
+                    var progress = state.buffer.get(base + StructLayout.OFF_PROG).toInt() and 0xFF
                     val pState = PartStatus.fromCode(status)
 
                     val alreadyFinalized = p.status == pState && pState.isFinal()
@@ -111,7 +111,11 @@ class DataModel(application: Application): AndroidViewModel(application) {
                     val error = if (!alreadyFinalized && (pState == PartStatus.FAILED || pState == PartStatus.VERIFICATION_FAILED)) p.error
                         ?: onFailure(p, PayloadDumper.getDumpError(p.id).getOrElse { "Unknown error" }) else p.error
 
-                    if (!alreadyFinalized && pState == PartStatus.COMPLETED) LogManager.success("Dumped ${p.name}.img to ${p.output}")
+                    if (!alreadyFinalized && pState == PartStatus.COMPLETED) {
+                        state.buffer.put(base + StructLayout.OFF_PROG, 0)
+                        progress = 0
+                        LogManager.success("Dumped ${p.name}.img to ${p.output}")
+                    }
 
                     p.copy(
                         status = pState,
