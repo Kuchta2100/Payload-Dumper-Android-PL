@@ -155,7 +155,10 @@ fun ExtractScreen(payloadState: PayloadState, appNavController: NavHostControlle
                                 .padding(horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(stringResource(R.string.extract_save_to), style = AppTheme.typography.label1)
+                            Text(
+                                stringResource(R.string.extract_save_to),
+                                style = AppTheme.typography.label1
+                            )
                             Chip(
                                 Modifier
                                     .weight(1f)
@@ -167,7 +170,10 @@ fun ExtractScreen(payloadState: PayloadState, appNavController: NavHostControlle
                                     )
                                     .padding(horizontal = 2.dp)
                             ) {
-                                outputDirectory.replace(externalStorage, stringResource(R.string.txt_internal_storage))
+                                outputDirectory.replace(
+                                    externalStorage,
+                                    stringResource(R.string.txt_internal_storage)
+                                )
                                     .split("/")
                                     .forEachIndexed { index, p ->
                                         if (index != 0)
@@ -194,6 +200,22 @@ fun ExtractScreen(payloadState: PayloadState, appNavController: NavHostControlle
                             }
                         }
                     }
+                    if (payloadState.manifest.isHttp) {
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = null,
+                                tint = AppTheme.colors.error
+                            )
+                            Text("http: Insecure connection", color = AppTheme.colors.error)
+                        }
+                    }
                     Spacer(Modifier.height(12.dp))
                     Row(
                         modifier = Modifier
@@ -202,7 +224,10 @@ fun ExtractScreen(payloadState: PayloadState, appNavController: NavHostControlle
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            stringResource(R.string.extract_parts_avail, payloadState.partitions.size),
+                            stringResource(
+                                R.string.extract_parts_avail,
+                                payloadState.partitions.size
+                            ),
                             style = AppTheme.typography.h4
                         )
                         Spacer(Modifier.weight(1f))

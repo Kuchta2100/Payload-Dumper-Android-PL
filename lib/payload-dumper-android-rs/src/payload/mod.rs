@@ -15,7 +15,7 @@ use crate::{
         errors::{AppError, AppResult},
     },
     payload::header::PayloadHeader,
-    reader::PayloadReader,
+    reader::{PayloadReader, Reader},
 };
 
 #[derive(Clone)]
@@ -60,6 +60,7 @@ impl PayloadDumper {
         let mut reader = PayloadReader::new(payload.clone(), buf_size)?;
 
         reader = reader.calculate_offset()?;
+        let http = reader.is_http();
 
         Ok(Self {
             payload,
@@ -171,6 +172,7 @@ impl PayloadDumper {
             .collect::<Vec<UpdateInfo>>();
 
         Ok(PartManifest {
+            is_http: self.reader.is_http(),
             partitions,
             block_size: manifest.block_size,
         })

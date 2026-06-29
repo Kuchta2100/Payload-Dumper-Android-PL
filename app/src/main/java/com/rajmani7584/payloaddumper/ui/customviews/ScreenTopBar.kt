@@ -26,7 +26,7 @@ import com.rajmani7584.payloaddumper.ui.components.components.topbar.TopBarScrol
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ScreenTopBar(title: String, modifier: Modifier = Modifier, scrollBehavior: TopBarScrollBehavior? = null, nav: Boolean = false, onNavClick: () -> Unit = {}, actions: @Composable RowScope.() -> Unit = {}) {
+fun ScreenTopBar(modifier: Modifier = Modifier, title: String, scrollBehavior: TopBarScrollBehavior? = null, nav: Boolean = false, onNavClick: () -> Unit = {}, actions: @Composable RowScope.() -> Unit = {}) {
     TopBar(
         modifier = modifier,
         scrollBehavior = scrollBehavior,

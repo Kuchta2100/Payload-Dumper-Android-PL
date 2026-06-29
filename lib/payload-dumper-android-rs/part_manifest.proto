@@ -3,6 +3,7 @@ package part_manifest;
 option java_package = "com.rajmani7584.payloaddumper.engine.part_manifest";
 
 message PartManifest {
+    optional bool is_http = 1;
     repeated UpdateInfo partitions = 2;
     optional uint32 block_size = 3;
 }

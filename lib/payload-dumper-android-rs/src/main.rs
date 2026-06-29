@@ -1,5 +1,3 @@
-use std::path::PathBuf;
-
 use crate::{helper::errors::AppResult, payload::Payload};
 
 mod engine;
@@ -9,12 +7,12 @@ mod reader;
 
 #[tokio::main]
 async fn main() -> AppResult<()> {
-    let payload =
-        Payload::from_file("/home/rajmani/Downloads/a1e9cce40c97479d8f4b62d55988b72b.zip");
+    // let payload =
+    //     Payload::from_file("/home/rajmani/Downloads/a1e9cce40c97479d8f4b62d55988b72b.zip");
 
-    // let payload = Payload::from_url(
-    //     "http://10.223.107.181:3000/Files%20by%20Google/lr83XRvh8xjbCD4YBFyCIWIsuc1I.zip",
-    // );
+    let payload = Payload::from_url(
+        "http://dl.google.com/dl/android/aosp/stallion-ota-bd6a.251031.001.a4-babc6d73.zip",
+    );
 
     // let b = dumper.get_manifest_bytes()?;
 
@@ -65,28 +63,30 @@ async fn main() -> AppResult<()> {
 
     let mut dumper = payload::PayloadDumper::new(payload.clone())?;
 
-    let header = dumper.get_header()?;
+    // let header = dumper.get_header()?;
     let manifest = dumper.get_part_manifest()?;
+
+    println!("{:?}", manifest.is_http());
 
     for p in manifest.partitions {
         let partition_name = &p.partition_name;
 
-        if partition_name == "boot" {
-            let out = PathBuf::from("./out/boot.img");
-            dumper
-                .dump(
-                    p.clone(),
-                    4096,
-                    &out,
-                    header,
-                    true,
-                    Some(|a| {
-                        println!("{}: Progress: {}%\r\r", partition_name, a);
-                        true
-                    }),
-                )
-                .await?;
-        }
+        // if partition_name == "boot" {
+        //     let out = PathBuf::from("./out/boot.img");
+        //     dumper
+        //         .dump(
+        //             p.clone(),
+        //             4096,
+        //             &out,
+        //             header,
+        //             true,
+        //             Some(|a| {
+        //                 println!("{}: Progress: {}%\r\r", partition_name, a);
+        //                 true
+        //             }),
+        //         )
+        //         .await?;
+        // }
 
         let len = p.operations.iter().fold(0, |a, b| a + b.data_length());
 

@@ -30,6 +30,30 @@ public object PartManifestKt {
     internal fun _build(): com.rajmani7584.payloaddumper.engine.part_manifest.PartManifestOuterClass.PartManifest = _builder.build()
 
     /**
+     * `optional bool is_http = 1;`
+     */
+    public var isHttp: kotlin.Boolean
+      @kotlin.jvm.JvmName("getIsHttp")
+        get() = _builder.isHttp
+      @kotlin.jvm.JvmName("setIsHttp")
+        set(value) {
+        _builder.isHttp = value
+      }
+    /**
+     * `optional bool is_http = 1;`
+     */
+    public fun clearIsHttp() {
+      _builder.clearIsHttp()
+    }
+    /**
+     * `optional bool is_http = 1;`
+     * @return Whether the isHttp field is set.
+     */
+    public fun hasIsHttp(): kotlin.Boolean {
+      return _builder.hasIsHttp()
+    }
+
+    /**
      * An uninstantiable, behaviorless type to represent the field in
      * generics.
      */

@@ -3,7 +3,7 @@ use std::{
     thread::sleep,
 };
 
-use ureq::Agent;
+use ureq::{Agent, ResponseExt as _};
 
 use crate::{
     helper::{
@@ -25,6 +25,7 @@ pub(crate) struct RemotePayloadReader {
     buffer_len: usize,
     retries: usize,
     eof: bool,
+    http: bool,
 }
 
 impl RemotePayloadReader {
@@ -48,14 +49,16 @@ impl RemotePayloadReader {
             buffer_len: 0,
             retries: 0,
             eof: false,
+            http: false,
         };
 
-        reader.connect()?;
+        let is_http = reader.connect()?;
+        reader.http = is_http;
 
         Ok(reader)
     }
 
-    fn connect(&mut self) -> AppResult<()> {
+    fn connect(&mut self) -> AppResult<bool> {
         let mut req = self.agent.get(&self.url);
 
         if self.offset > 0 {
@@ -64,50 +67,85 @@ impl RemotePayloadReader {
 
         let response = req.call().map_err(|e| AppError::Io(e.into_io()))?;
 
-        let status = response.status();
+        let is_http = matches!(response.get_uri().scheme_str(), Some("http"));
 
-        let _ = match status.as_u16() {
+        let status = response.status().as_u16();
+
+        match status {
+            200 if self.offset > 0 => {
+                return Err(AppError::Other(
+                    "Server does not support byte ranges".into(),
+                ));
+            }
             200 | 206 => {}
             _ => {
-                return Err(AppError::Other(format!(
-                    "Http error: {}",
-                    status.canonical_reason().unwrap_or("Unknown")
-                )));
+                return Err(AppError::Other(format!("HTTP error {}", status)));
             }
-        };
-
-        if self.offset > 0 && status.as_u16() != 206 {
-            return Err(AppError::Other("Range not supported!".into()));
         }
 
         let headers = response.headers();
-        if let Some(content_range) = headers.get("Content-Range") {
-            if let Some(total) = content_range
-                .to_str()
-                .map_err(|_| AppError::Other("Can't get content range".into()))?
-                .split("/")
-                .nth(1)
-            {
-                if let Ok(v) = total.parse::<u64>() {
-                    self.total_size = Some(v);
+
+        match status {
+            206 => {
+                let content_range = headers
+                    .get("Content-Range")
+                    .ok_or_else(|| AppError::Other("206 response missing Content-Range".into()))?
+                    .to_str()
+                    .map_err(|_| AppError::Other("Invalid Content-Range".into()))?;
+
+                let range = content_range
+                    .strip_prefix("bytes ")
+                    .ok_or_else(|| AppError::Other("Invalid Content-Range format".into()))?;
+
+                let (range_part, total_part) = range
+                    .split_once('/')
+                    .ok_or_else(|| AppError::Other("Invalid Content-Range".into()))?;
+
+                let (start, _end) = range_part
+                    .split_once('-')
+                    .ok_or_else(|| AppError::Other("Invalid Content-Range range".into()))?;
+
+                let start = start
+                    .parse::<u64>()
+                    .map_err(|_| AppError::Other("Invalid range start".into()))?;
+
+                if start != self.offset {
+                    return Err(AppError::Other(format!(
+                        "Server resumed from wrong offset: expected {}, got {}",
+                        self.offset, start
+                    )));
+                }
+
+                if total_part != "*" {
+                    if let Ok(total) = total_part.parse::<u64>() {
+                        self.total_size = Some(total);
+                    }
                 }
             }
-        } else if let Some(content_length) = headers.get("Content-Length") {
-            if let Ok(len) = content_length
-                .to_str()
-                .map_err(|_| AppError::Other("Can't get content length".into()))?
-                .parse::<u64>()
-            {
-                self.total_size = Some(len);
+
+            200 => {
+                if let Some(content_length) = headers.get("Content-Length") {
+                    let len = content_length
+                        .to_str()
+                        .map_err(|_| AppError::Other("Invalid Content-Length".into()))?
+                        .parse::<u64>()
+                        .map_err(|_| AppError::Other("Invalid Content-Length".into()))?;
+
+                    self.total_size = Some(len);
+                }
             }
+
+            _ => unreachable!(),
         }
+
         let reader = response.into_body().into_reader();
+
         self.response_reader = Some(Box::new(reader));
 
         self.buffer_pos = 0;
         self.buffer_len = 0;
 
-        Ok(())
+        Ok(is_http)
     }
 
     fn refill_buffer(&mut self) -> AppResult<()> {
@@ -172,7 +210,9 @@ impl RemotePayloadReader {
 
         sleep(delay);
 
-        self.connect()
+        let _ = self.connect()?;
+
+        Ok(())
     }
 }
 
@@ -275,6 +315,10 @@ impl Seek for RemotePayloadReader {
 impl Reader for RemotePayloadReader {
     fn len(&self) -> Option<u64> {
         self.total_size
+    }
+
+    fn is_http(&self) -> Option<bool> {
+        Some(self.http)
     }
 }
 

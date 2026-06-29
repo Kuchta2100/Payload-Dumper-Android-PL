@@ -35,11 +35,15 @@ pub(crate) trait Reader: Read + Seek + Send + Sync {
             None => Ok(false),
         }
     }
+    fn is_http(&self) -> Option<bool>;
 }
 
 impl Reader for PayloadReader {
     fn len(&self) -> Option<u64> {
         self.size.or_else(|| self.inner.len())
+    }
+    fn is_http(&self) -> Option<bool> {
+        self.inner.is_http()
     }
 }
 

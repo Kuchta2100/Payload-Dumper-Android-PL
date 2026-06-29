@@ -16,6 +16,17 @@ public final class PartManifestOuterClass {
       com.google.protobuf.MessageLiteOrBuilder {
 
     /**
+     * <code>optional bool is_http = 1;</code>
+     * @return Whether the isHttp field is set.
+     */
+    boolean hasIsHttp();
+    /**
+     * <code>optional bool is_http = 1;</code>
+     * @return The isHttp.
+     */
+    boolean getIsHttp();
+
+    /**
      * <code>repeated .part_manifest.UpdateInfo partitions = 2;</code>
      */
     java.util.List<com.rajmani7584.payloaddumper.engine.part_manifest.PartManifestOuterClass.UpdateInfo> 
@@ -52,6 +63,40 @@ public final class PartManifestOuterClass {
       partitions_ = emptyProtobufList();
     }
     private int bitField0_;
+    public static final int IS_HTTP_FIELD_NUMBER = 1;
+    private boolean isHttp_;
+    /**
+     * <code>optional bool is_http = 1;</code>
+     * @return Whether the isHttp field is set.
+     */
+    @java.lang.Override
+    public boolean hasIsHttp() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <code>optional bool is_http = 1;</code>
+     * @return The isHttp.
+     */
+    @java.lang.Override
+    public boolean getIsHttp() {
+      return isHttp_;
+    }
+    /**
+     * <code>optional bool is_http = 1;</code>
+     * @param value The isHttp to set.
+     */
+    private void setIsHttp(boolean value) {
+      bitField0_ |= 0x00000001;
+      isHttp_ = value;
+    }
+    /**
+     * <code>optional bool is_http = 1;</code>
+     */
+    private void clearIsHttp() {
+      bitField0_ = (bitField0_ & ~0x00000001);
+      isHttp_ = false;
+    }
+
     public static final int PARTITIONS_FIELD_NUMBER = 2;
     private com.google.protobuf.Internal.ProtobufList<com.rajmani7584.payloaddumper.engine.part_manifest.PartManifestOuterClass.UpdateInfo> partitions_;
     /**
@@ -157,7 +202,7 @@ public final class PartManifestOuterClass {
      */
     @java.lang.Override
     public boolean hasBlockSize() {
-      return ((bitField0_ & 0x00000001) != 0);
+      return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <code>optional uint32 block_size = 3;</code>
@@ -172,14 +217,14 @@ public final class PartManifestOuterClass {
      * @param value The blockSize to set.
      */
     private void setBlockSize(int value) {
-      bitField0_ |= 0x00000001;
+      bitField0_ |= 0x00000002;
       blockSize_ = value;
     }
     /**
      * <code>optional uint32 block_size = 3;</code>
      */
     private void clearBlockSize() {
-      bitField0_ = (bitField0_ & ~0x00000001);
+      bitField0_ = (bitField0_ & ~0x00000002);
       blockSize_ = 0;
     }
 
@@ -279,6 +324,42 @@ public final class PartManifestOuterClass {
         super(DEFAULT_INSTANCE);
       }
 
+
+      /**
+       * <code>optional bool is_http = 1;</code>
+       * @return Whether the isHttp field is set.
+       */
+      @java.lang.Override
+      public boolean hasIsHttp() {
+        return instance.hasIsHttp();
+      }
+      /**
+       * <code>optional bool is_http = 1;</code>
+       * @return The isHttp.
+       */
+      @java.lang.Override
+      public boolean getIsHttp() {
+        return instance.getIsHttp();
+      }
+      /**
+       * <code>optional bool is_http = 1;</code>
+       * @param value The isHttp to set.
+       * @return This builder for chaining.
+       */
+      public Builder setIsHttp(boolean value) {
+        copyOnWrite();
+        instance.setIsHttp(value);
+        return this;
+      }
+      /**
+       * <code>optional bool is_http = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearIsHttp() {
+        copyOnWrite();
+        instance.clearIsHttp();
+        return this;
+      }
 
       /**
        * <code>repeated .part_manifest.UpdateInfo partitions = 2;</code>
@@ -436,13 +517,14 @@ public final class PartManifestOuterClass {
         case BUILD_MESSAGE_INFO: {
             java.lang.Object[] objects = new java.lang.Object[] {
               "bitField0_",
+              "isHttp_",
               "partitions_",
               com.rajmani7584.payloaddumper.engine.part_manifest.PartManifestOuterClass.UpdateInfo.class,
               "blockSize_",
             };
             java.lang.String info =
-                "\u0001\u0002\u0000\u0001\u0002\u0003\u0002\u0000\u0001\u0001\u0002\u041b\u0003\u100b" +
-                "\u0000";
+                "\u0001\u0003\u0000\u0001\u0001\u0003\u0003\u0000\u0001\u0001\u0001\u1007\u0000\u0002" +
+                "\u041b\u0003\u100b\u0001";
             return newMessageInfo(DEFAULT_INSTANCE, info, objects);
         }
         case GET_DEFAULT_INSTANCE: {

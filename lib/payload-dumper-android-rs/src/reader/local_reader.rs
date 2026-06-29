@@ -35,6 +35,9 @@ impl Seek for LocalPayloadReader {
 }
 
 impl Reader for LocalPayloadReader {
+    fn is_http(&self) -> Option<bool> {
+        None
+    }
     fn len(&self) -> Option<u64> {
         Some(self.len)
     }

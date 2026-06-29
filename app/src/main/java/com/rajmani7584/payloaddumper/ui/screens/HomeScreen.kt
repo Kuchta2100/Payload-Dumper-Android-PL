@@ -112,65 +112,69 @@ fun HomeScreenUI(
         topBar = { ScreenTopBar(title = stringResource(R.string.app_name)) }) { innerPadding ->
         Column(
             Modifier.padding(top = innerPadding.calculateTopPadding()).fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column {
-                when (payloadState) {
-                    PayloadState.Loading -> LoadingIndicator()
-                    else -> {
-                        hasNotifyPermission?.let {
-                            if (!it)
-                                Column(
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-                                        .clip(RoundedCornerShape(8.dp)).background(
+            when (payloadState) {
+                PayloadState.Loading -> LoadingIndicator()
+                else -> {
+                    hasNotifyPermission?.let {
+                        if (!it)
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
+                                    .clip(RoundedCornerShape(8.dp)).background(
                                         LocalColors.current.surface
                                     ).border(
                                         BorderStroke(1.dp, LocalContentColor.current),
                                         RoundedCornerShape(8.dp)
                                     ), horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    val activity = LocalActivity.current
-                                    Spacer(Modifier.height(4.dp))
-                                    Text(stringResource(R.string.notification_perm_hint))
-                                    Spacer(Modifier.height(6.dp))
-                                    Button(text = stringResource(R.string.allow_notifications), onClick = {
+                            ) {
+                                val activity = LocalActivity.current
+                                Spacer(Modifier.height(4.dp))
+                                Text(stringResource(R.string.notification_perm_hint))
+                                Spacer(Modifier.height(6.dp))
+                                Button(
+                                    text = stringResource(R.string.allow_notifications),
+                                    onClick = {
                                         if (activity == null) return@Button
                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                             dataModel.requestNotifyPermission(activity)
                                         }
                                     })
-                                    Spacer(Modifier.height(4.dp))
-                                }
-                        }
+                                Spacer(Modifier.height(4.dp))
+                            }
+                    }
+                    Column(
+                        Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
                         Column(
-                            Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier.padding(
+                                vertical = 16.dp,
+                                horizontal = 24.dp
+                            )
                         ) {
-                            Column(
-                                modifier = Modifier.padding(
-                                    vertical = 16.dp,
-                                    horizontal = 24.dp
+                            Icon(
+                                Icons.Default.UploadFile,
+                                contentDescription = "File",
+                                Modifier.size(80.dp).align(
+                                    Alignment.CenterHorizontally
                                 )
-                            ) {
-                                Icon(
-                                    Icons.Default.UploadFile,
-                                    contentDescription = "File",
-                                    Modifier.size(80.dp).align(
-                                        Alignment.CenterHorizontally
-                                    )
-                                )
-                                Spacer(Modifier.height(24.dp))
-                                dataModel.hasPermission.value?.let {
-                                    if (!it) {
-                                        Button(
-                                            text = stringResource(R.string.first_start_allow_file_access),
-                                            onClick = {
-                                                if (activity == null) return@Button
-                                                dataModel.requestPermission(activity)
-                                            })
-                                    } else
-                                        Button(text = stringResource(R.string.home_select_file), onClick = {
+                            )
+                            Spacer(Modifier.height(24.dp))
+                            dataModel.hasPermission.value?.let {
+                                if (!it) {
+                                    Button(
+                                        text = stringResource(R.string.first_start_allow_file_access),
+                                        onClick = {
+                                            if (activity == null) return@Button
+                                            dataModel.requestPermission(activity)
+                                        })
+                                } else
+                                    Button(
+                                        text = stringResource(R.string.home_select_file),
+                                        onClick = {
                                             appNavController.navigate(
                                                 Screens.Selector.createRoute(
                                                     false
@@ -182,83 +186,92 @@ fun HomeScreenUI(
                                                 launchSingleTop = true
                                             }
                                         })
-                                }
                             }
-                            Spacer(Modifier.height(24.dp))
+                        }
+                        Spacer(Modifier.height(24.dp))
 
-                            Text(stringResource(R.string.home_select_or), color = AppTheme.colors.text.copy(alpha = .4f))
-                            Spacer(Modifier.height(24.dp))
-                            Column {
-                                val url by dataModel.remoteUrl
-                                OutlinedTextField(
-                                    value = url, onValueChange = { dataModel.setURL(it) },
-                                    singleLine = true,
-                                    modifier = Modifier.widthIn(Dp.Unspecified, 540.dp)
-                                        .fillMaxWidth(.75f),
-                                    placeholder = {
-                                        Text(
-                                            "https://website.com/ota.zip",
-                                            color = AppTheme.colors.text.copy(alpha = .4f)
-                                        )
-                                    }
-                                )
-                                Button(
-                                    onClick = {
-                                        dataModel.init(
-                                            PayloadType.RemotePayload(url)
-                                        )
-                                    },
-                                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                                        .padding(vertical = 12.dp),
-                                    text = stringResource(R.string.home_fetch_remote)
-                                )
-                            }
-                            Spacer(Modifier.height(24.dp))
-                            if (payloadState is PayloadState.Ready) {
-                                Row(
-                                    modifier = Modifier.widthIn(Dp.Unspecified, 540.dp)
-                                        .fillMaxWidth(.8f)
-                                        .clip(RoundedCornerShape(8.dp)).background(
-                                            AppTheme.colors.primary.copy(alpha = .1f)
-                                        ).clickable {
-                                            homeNavController.navigate(Screens.Extract.route) {
-                                                popUpTo(Screens.Home.route) {
-                                                    saveState = true
-                                                }
-                                                launchSingleTop = false
+                        Text(
+                            stringResource(R.string.home_select_or),
+                            color = AppTheme.colors.text.copy(alpha = .4f)
+                        )
+                        Spacer(Modifier.height(24.dp))
+                        Column {
+                            val url by dataModel.remoteUrl
+                            OutlinedTextField(
+                                value = url, onValueChange = { dataModel.setURL(it) },
+                                singleLine = true,
+                                modifier = Modifier.widthIn(Dp.Unspecified, 540.dp)
+                                    .fillMaxWidth(.75f),
+                                placeholder = {
+                                    Text(
+                                        "https://website.com/ota.zip",
+                                        color = AppTheme.colors.text.copy(alpha = .4f)
+                                    )
+                                }
+                            )
+                            Button(
+                                onClick = {
+                                    dataModel.init(
+                                        PayloadType.RemotePayload(url)
+                                    )
+                                },
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                                    .padding(vertical = 12.dp),
+                                text = stringResource(R.string.home_fetch_remote)
+                            )
+                        }
+                        Spacer(Modifier.height(24.dp))
+                        if (payloadState is PayloadState.Ready) {
+                            Row(
+                                modifier = Modifier.widthIn(Dp.Unspecified, 540.dp)
+                                    .fillMaxWidth(.8f)
+                                    .clip(RoundedCornerShape(8.dp)).background(
+                                        AppTheme.colors.primary.copy(alpha = .1f)
+                                    ).clickable {
+                                        homeNavController.navigate(Screens.Extract.route) {
+                                            popUpTo(Screens.Home.route) {
+                                                saveState = true
                                             }
-                                        }.padding(horizontal = 8.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        payloadState.name,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.weight(1f)
+                                            launchSingleTop = false
+                                        }
+                                    }.padding(horizontal = 8.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    payloadState.name,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Box(modifier = Modifier.size(16.dp)) {
+                                    Icon(
+                                        Icons.AutoMirrored.Default.ArrowForward,
+                                        contentDescription = null
                                     )
-                                    Box(modifier = Modifier.size(16.dp)) {
-                                        Icon(
-                                            Icons.AutoMirrored.Default.ArrowForward,
-                                            contentDescription = null
-                                        )
-                                    }
                                 }
                             }
-                            if (payloadState is PayloadState.Error) {
-                                Box(
-                                    Modifier.widthIn(Dp.Unspecified, 840.dp).fillMaxWidth(.75f)
-                                ) {
-                                    Text(
-                                        payloadState.message,
-                                        color = Color.Red,
-                                        fontFamily = FontFamily.Monospace
-                                    )
-                                }
+                        }
+                        if (payloadState is PayloadState.Error) {
+                            Box(
+                                Modifier.widthIn(Dp.Unspecified, 840.dp).fillMaxWidth(.75f)
+                            ) {
+                                Text(
+                                    "Error: ${
+                                        payloadState.message.replace(
+                                            "Rust error: Parse failed for input: ",
+                                            ""
+                                        )
+                                    }".replace("Error: Error:", "Error:"),
+                                    color = Color.Red,
+                                    fontFamily = FontFamily.Monospace,
+                                    modifier = Modifier.align(Alignment.Center)
+                                )
                             }
                         }
                     }
                 }
             }
+
         }
     }
 }

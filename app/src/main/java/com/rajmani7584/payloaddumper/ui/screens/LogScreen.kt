@@ -105,7 +105,7 @@ object LogManager {
     }
 
     fun error(message: String) {
-        log(LogType.Failure(message))
+        log(LogType.Failure(message.replace("Rust error: Parse failed for input:", "Engine")))
     }
 
     fun log(message: String) {
