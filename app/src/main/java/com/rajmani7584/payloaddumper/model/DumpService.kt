@@ -18,7 +18,15 @@ class DumpService : Service() {
     inner class LocalBinder : Binder() {
         fun getService() = this@DumpService
     }
-
+    override fun onCreate() {
+        super.onCreate()
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            "Progress",
+            NotificationManager.IMPORTANCE_LOW
+        )
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
     override fun onBind(intent: Intent) = binder
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -37,16 +45,9 @@ class DumpService : Service() {
     }
 
     private fun buildNotification(content: String): Notification {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Progress",
-            NotificationManager.IMPORTANCE_LOW
-        )
-        getSystemService(NotificationManager::class.java)
-            .createNotificationChannel(channel)
-
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            setPackage(packageName)
         }
 
         val toIntent = PendingIntent.getActivity(
